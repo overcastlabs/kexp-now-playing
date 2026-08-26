@@ -1,0 +1,419 @@
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-brand: #fbad18;
+  --color-brand-alt: oklch(from var(--color-brand) calc(l - 0.1) calc(c - 0.05) h);
+  --color-error: #b11b00;
+  --color-error-alt: oklch(from var(--color-error) calc(l - 0.1) calc(c - 0.05) h);
+  --button-overlay: inset 0 0 0 10rem rgba(255, 255, 255, 0.25);
+  --bg: #0f0f0f;
+  --surface-primary: #1a1a1a;
+  --surface-secondary: #4b4b4b;
+  --border: #2a2a2a;
+  --text-primary: #fffffff4;
+  --text-secondary: #aaaaaa;
+  --text-muted: #7d7d7d;
+  --text-size-ratio: 1.33;
+  --text-size-xl: calc(1rem * pow(var(--text-size-ratio), 2));
+  --text-size-lg: calc(1rem * pow(var(--text-size-ratio), 1));
+  --text-size-md: calc(1rem * pow(var(--text-size-ratio), 0));
+  --text-size-sm: calc(1rem / pow(var(--text-size-ratio), 1));
+  --text-size-xs: calc(1rem / pow(var(--text-size-ratio), 2));
+  --text-weight-bold: 600;
+  --text-weight-black: 700;
+  --letter-spacing-sm: .075em;
+  --letter-spacing-md: calc(var(--letter-spacing-sm) * pow(var(--text-size-ratio), 1));
+  --letter-spacing-lg: calc(var(--letter-spacing-sm) * pow(var(--text-size-ratio), 2));
+  --border-radius: .25rem;
+}
+
+/* html, */
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* html, */
+body.app-popup {
+  width: 360px;
+  height: 600px;
+}
+
+.app {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Base Elements ────────────────────────────────*/
+a {
+  color: var(--color-brand);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+blockquote {
+  display: block;
+  color: var(--text-secondary);
+  font-style: italic;
+  border-left: .25em solid var(--color-brand);
+  padding-left: .75em;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+
+/* ── Buttons ────────────────────────────────*/
+.button {
+  display: block;
+  padding: .75em 1em;
+  background: var(--surface-primary);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  font-size: var(--text-size-sm);
+  font-weight: var(--text-weight-bold);
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-sm);
+}
+.button:hover {
+  text-decoration: none;
+}
+.button-primary {
+  background: var(--color-brand);
+  color: var(--text-primary);
+}
+.button-primary:hover {
+  background: var(--surface-secondary);
+  border-color: var(--color-brand);
+}
+.button-secondary {
+  background: var(--surface-secondary);
+  text-align: center;
+}
+.button-secondary:hover {
+  box-shadow: var(--button-overlay);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+.button-error {
+  border: none;
+  background-color: var(--color-error-alt);
+}
+.button-error:hover {
+  box-shadow: var(--button-overlay);
+}
+
+.text-button {
+  color: currentColor;
+  background: none;
+  font-size: 1.5em;
+  border: none;
+  cursor: pointer;
+  padding: .1em .25em;
+  border-radius: .2em;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.text-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Typography ────────────────────────────────── */
+.text-color-primary {
+  color: var(--text-primary);
+}
+.text-color-secondary {
+  color: var(--text-secondary);
+}
+.text-color-muted {
+  color: var(--text-muted);
+}
+.text-size-xl {
+  font-size: var(--text-size-xl);
+}
+.text-size-lg {
+  font-size: var(--text-size-lg);
+}
+.text-size-md {
+  font-size: var(--text-size-md);
+}
+.text-size-sm {
+  font-size: var(--text-size-sm);
+}
+.text-size-xs {
+  font-size: var(--text-size-xs);
+}
+.text-weight-bold {
+  font-weight: var(--text-weight-bold);
+}
+.text-weight-black {
+  font-weight: var(--text-weight-black);
+}
+.text-spacing-sm {
+  letter-spacing: var(--letter-spacing-sm);
+}
+.text-spacing-md {
+  letter-spacing: var(--letter-spacing-md);
+}
+.text-spacing-lg {
+  letter-spacing: var(--letter-spacing-lg);
+}
+.text-style-italic {
+  font-style: italic;
+}
+.text-style-uppercase {
+  text-transform: uppercase;
+}
+.text-overflow-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Layout ────────────────────────────────── */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.stack--horizontal {
+  flex-direction: row;
+}
+.stack--center {
+  align-items: center;
+}
+.m-l-auto {
+  margin-left: auto;
+}
+
+/* ── Loader ────────────────────────────────── */
+.loader {
+  position: relative;
+  width: 100%;
+  height: .25rem;
+  background-color: var(--color-brand-alt);
+  overflow: hidden;
+
+}
+.loader::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  top: 0;
+  width: 80%;
+  background-color: rgba(255, 255, 255, 0.5);
+  animation: mui-linear-animation 2s infinite linear;
+  transform-origin: left;
+}
+
+@keyframes mui-linear-animation {
+  0% { transform: translateX(-100%) scaleX(.8); }
+  50% { transform: translateX(50%) scaleX(.5); }
+  100% { transform: translateX(200%) scaleX(1.1); }
+}
+
+/* ── Surfaces ────────────────────────────────── */
+.surface-primary {
+  background-color: var(--surface-primary);
+}
+.surface-secondary {
+  background-color: var(--surface-secondary);
+}
+
+/* ── Header ────────────────────────────────── */
+header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  background: var(--color-brand);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  line-height: 0;
+  box-shadow: 0 0 1rem 0 rgba(57, 57, 57, 0.3);
+}
+
+.header-logo {
+  height: 1em;
+}
+
+.dot {
+  display: inline-block;
+  width: .5em;
+  height: .5em;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+#loader {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+/* ── Error ─────────────────────────────────── */
+.error {
+  background: var(--color-error);
+  color: var(--text-primary);
+  padding: .5rem 1rem;
+}
+
+/* ── Current Track ─────────────────────────── */
+.current-info {
+  padding: 1.25rem 1rem;
+  line-height: 1;
+  gap: .5rem;
+}
+
+.current-info--comment {
+  margin-top: .75rem;
+}
+
+/* ── History ───────────────────────────────── */
+.history-section {
+  padding: 1rem;
+}
+
+.history-item {
+  gap: .75rem;
+}
+
+.history-art {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-meta {
+  flex: 1 0 0;
+  min-width: 0;
+}
+
+/* ── Utilities ─────────────────────────────── */
+.hidden {
+  display: none !important;
+}
+
+.img-fullsize {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.img-aspect-square {
+  aspect-ratio: 1;
+}
+
+.album-art {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+.pulse {
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.spinning {
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.img-loader {
+  isolation: isolate;
+}
+.img-loader::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    -45deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 60%
+  );
+  background-size: 300%;
+  background-position-x: 120%;
+  animation: shimmer 1.5s linear infinite;
+}
+@keyframes shimmer {
+  33%, 100% { background-position-x: -20%; }
+}

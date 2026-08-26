@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KEXP Now Playing</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+    <header class="text-size-sm text-style-uppercase text-spacing-md">
+      <img src="images/logo-wordmark-white.svg" class="header-logo" alt="KEXP" />
+      <span>Now Playing</span>
+      <span class="dot pulse"></span>
+      <button class="refresh text-button m-l-auto" title="Refresh">&#8635;</button>
+      <div id="loader" class="loader"></div>
+    </header>
+    
+    <section id="error" class="error stack stack--horizontal stack--center text-size-sm text-style-uppercase text-spacing-md hidden">
+      <span>Error loading playlist</span>
+      <button class="refresh button button-error m-l-auto">Retry</button>
+    </section>
+
+    <section id="current-track" class="surface-primary"></section>
+    
+    <section id="history" class="history-section stack hidden">
+      <h4 class="section-label text-style-uppercase text-spacing-lg text-color-muted text-size-xs text-weight-black">Recent Tracks</h4>
+      <ul id="history-list" class="stack"></ul>
+      <a
+        id="full-playlist-link"
+        href="https://kexp.org/playlist/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="button button-secondary"
+      >
+        View Full Playlist &nearr;
+      </a>
+    </section>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
