@@ -19,6 +19,13 @@ const TEXT_STRINGS = {
   loading: 'Loading',
 };
 
+const urlParams = new URLSearchParams(window.location.search);
+const env = urlParams.get('env');
+
+if (env) {
+  document.documentElement.classList.add(`${env}-view`);
+}
+
 const esc = (str) => {
   const div = document.createElement('div');
   div.textContent = str || '';
@@ -273,6 +280,14 @@ document.querySelectorAll(`.${CLASS_REFRESH}`).forEach(el => el.addEventListener
   EL_LOADER.classList.remove(CLASS_HIDDEN);
   load();
 }));
+
+document.querySelector('.sidebar-button')?.addEventListener('click', () => {
+  chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT })
+    .then(() => window.close())
+    .catch((err) => {
+      console.error('Unable to open the side panel', err);
+    });
+});
 
 renderCurrentTrack({
   id: '-1',

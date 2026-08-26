@@ -4,15 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KEXP Now Playing</title>
-  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="app.css">
 </head>
-<body class="app-popup">
+<body>
   <div class="app">
     <header class="text-size-sm text-style-uppercase text-spacing-md">
       <img src="images/logo-wordmark-white.svg" class="header-logo" alt="KEXP" />
       <span>Now Playing</span>
       <span class="dot pulse"></span>
-      <button class="refresh text-button m-l-auto" title="Refresh">&#8635;</button>
+      <button class="refresh text-button m-l-auto" title="Manual Refresh">&#8635;</button>
+      <button class="sidebar-button text-button m-l-auto" title="Open Sidebar">
+        <svg xmlns="http://www.w3.org/2000/svg" height="14" width="14" viewBox="0 -960 960 960" fill="currentColor">
+          <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H360v560H200Zm160 0v-560-160 560Z"/>
+        </svg>
+      </button>
       <div id="loader" class="loader"></div>
     </header>
     
@@ -38,6 +43,6 @@
     </section>
   </div>
 
-  <script src="popup.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
