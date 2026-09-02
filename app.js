@@ -1,6 +1,7 @@
 'use strict';
 
-const API_URL = 'https://api.kexp.org/v2/plays/?limit=11&ordering=-airdate';
+const HISTORY_SIZE = 20;
+const API_URL = `https://api.kexp.org/v2/plays/?limit=${HISTORY_SIZE + 1}&ordering=-airdate`;
 const AIRBREAK_IMAGE = 'images/icon-large.svg';
 const ALBUM_FALLBACK = 'images/album-fallback.svg';
 const AIRBREAK_TYPE = 'airbreak';
@@ -8,6 +9,7 @@ const CLASS_HIDDEN = 'hidden';
 const CLASS_REFRESH = 'refresh';
 const EL_LOADER = document.getElementById('loader');
 const EL_ERROR = document.getElementById('error');
+const EL_CURRENT_ART = document.querySelector('.current-art');
 const EL_CURRENT_TRACK = document.getElementById('current-track');
 const EL_HISTORY = document.getElementById('history');
 const EL_HISTORY_LIST = document.getElementById('history-list');
@@ -179,30 +181,30 @@ const getImg = (play) => {
 
 const renderCurrentTrack = (play) => {
   EL_CURRENT_TRACK.innerHTML = `
-    <div class="current-art"></div>
-    <div class="current-info stack">
-      <h1 class="text-size-xl text-weight-black">${play.song}</h1>
-      ${play.artist ? `<h2 class="text-color-secondary text-weight-bold">${play.artist}</h2>` : ''}
-      ${play.album ? `<h3 class="text-size-sm text-style-italic text-color-muted text-weight-bold">${play.album}${play.year ? ' &ndash; ' + yearFromDateString(play.year) : ''}</h3>` : ''}
-      ${play.comment ? `<blockquote class="current-info--comment text-size-sm">${play.comment}</blockquote>` : ''}
-    </div>
+    <h1 class="text-size-xl text-weight-black">${play.song}</h1>
+    ${play.artist ? `<h2 class="text-color-secondary text-weight-bold">${play.artist}</h2>` : ''}
+    ${play.album ? `<h3 class="text-size-sm text-style-italic text-color-muted text-weight-bold">${play.album}${play.year ? ' &ndash; ' + yearFromDateString(play.year) : ''}</h3>` : ''}
+    ${play.comment ? `<blockquote class="text-size-sm m-t-sm">${play.comment}</blockquote>` : ''}
   `;
-  EL_CURRENT_TRACK.querySelector('.current-art').appendChild(getImg(play));
+  EL_CURRENT_ART.replaceChildren(getImg(play));
 };
 
 const historyNodeCache = new Map(); // play.id → <li>
 
 const createHistoryNode = (play) => {
   const li = document.createElement('li');
-  li.className = 'history-item stack stack--horizontal stack--center';
+  li.className = 'history-item stack';
   li.innerHTML = `
-    <div class="history-art"></div>
-    <div class="history-meta">
-      <h5 class="text-size-md text-weight-bold text-overflow-ellipsis">${play.song}</h5>
-      ${play.artist ? `<h6 class="text-color-secondary text-size-sm text-overflow-ellipsis">${play.artist}</h6>` : ''}
+    <div class="stack stack--horizontal stack--center">
+      <div class="history-art"></div>
+      <div class="history-meta">
+        <h5 class="text-size-md text-weight-bold text-overflow-ellipsis">${play.song}</h5>
+        ${play.artist ? `<h6 class="text-color-secondary text-size-sm text-overflow-ellipsis">${play.artist}</h6>` : ''}
+      </div>
+      <div class="text-color-muted text-size-sm text-style-italic">${formatTime(play.airdate)}</div>
     </div>
-    <div class="text-color-muted text-size-sm text-style-italic">${formatTime(play.airdate)}</div>
-  `;
+    `;
+    // ${play.comment ? `<blockquote class="current-info--comment text-size-sm m-b-md">${play.comment}</blockquote>` : ''}
   li.querySelector('.history-art').appendChild(getImg(play));
   li.title = `${play.song} - ${play.artist}`;
   return li;

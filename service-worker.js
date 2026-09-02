@@ -2,7 +2,7 @@
 
 const ALBUM_IMAGE_CACHE = 'album-images-v2';
 const ALBUM_IMAGE_STAGE_CACHE = 'album-images-stage-v2';
-const ALBUM_IMAGE_CACHE_LIMIT = 15;
+const ALBUM_IMAGE_CACHE_LIMIT = 21;
 const ALBUM_IMAGE_CACHE_ORDER_KEY = 'albumImageCacheOrder';
 
 const isArchiveImageRequest = (request) => {
