@@ -53,6 +53,7 @@ table {
 }
 
 :root {
+  --header-height: 3.25rem;
   --color-brand: #fbad18;
   --color-brand-alt: oklch(from var(--color-brand) calc(l - 0.1) calc(c - 0.05) h);
   --color-error: #b11b00;
@@ -96,12 +97,13 @@ body {
 
 .sidebar-view body {
   height: 100vh;
-  max-width: 600px;
+  width: 100%;
+  max-width: 1200px;
 }
 
 .sidebar-view .current-info {
   position: sticky;
-  top: 46px;
+  top: var(--header-height);
   z-index: 1;
 }
 

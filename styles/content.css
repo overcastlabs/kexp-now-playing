@@ -1,6 +1,7 @@
 header {
   display: flex;
   align-items: center;
+  height: var(--header-height);
   gap: .5rem;
   padding: .75rem 1rem;
   background: var(--color-brand);
@@ -29,6 +30,15 @@ header {
   padding: .5rem 1rem;
 }
 
+.content-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.current-column {
+  display: contents;
+}
+
 .current-info {
   padding: 1.25rem 1rem;
   line-height: 1;
@@ -36,6 +46,7 @@ header {
 }
 
 .history-section {
+  order: 2;
   padding: 1rem;
 }
 
@@ -59,14 +70,24 @@ header {
 }
 
 .settings-section {
-  gap: .5rem;
+  order: 3;
   padding: 1rem;
   border-top: 1px solid var(--border);
   background: var(--surface-primary);
 }
 
+.settings-summary {
+  list-style: none;
+  cursor: default;
+}
+
+.settings-summary::-webkit-details-marker {
+  display: none;
+}
+
 .settings-list {
   display: grid;
+  margin-top: .5rem;
 }
 
 .setting-row {
@@ -115,4 +136,64 @@ header {
 
 @keyframes shimmer {
   33%, 100% { background-position-x: -20%; }
+}
+
+@media (max-width: 600px) {
+  .settings-summary {
+    pointer-events: none;
+  }
+}
+
+@media (min-width: 601px) {
+  .content-layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 5fr) minmax(0, 7fr);
+    grid-template-areas: "current history";
+    align-items: start;
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+
+  .current-column {
+    display: flex;
+    flex-direction: column;
+    grid-area: current;
+    position: sticky;
+    top: var(--header-height);
+    height: calc(100dvh - var(--header-height));
+    min-width: 0;
+  }
+
+  .current-column .current-info {
+    flex: 1 1 auto;
+    position: static;
+    top: auto;
+  }
+
+  .history-section {
+    grid-area: history;
+    min-width: 0;
+  }
+
+  .settings-section {
+    order: initial;
+  }
+
+  .settings-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+
+  .settings-summary::after {
+    content: '+';
+    color: var(--text-muted);
+    font-size: var(--text-size-md);
+    line-height: 1;
+  }
+
+  .settings-section[open] > .settings-summary::after {
+    content: '\2212';
+  }
 }

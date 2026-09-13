@@ -12,6 +12,8 @@ const elements = {
   historySize: document.getElementById('history-size'),
   loader: document.getElementById('loader'),
   refreshIndicator: document.querySelector('.refresh-indicator'),
+  settingsPanel: document.querySelector('.settings-section'),
+  settingsSummary: document.querySelector('.settings-summary'),
   showHistoryComments: document.getElementById('show-history-comments'),
   sidebarButton: document.querySelector('.sidebar-button'),
 };
@@ -78,6 +80,17 @@ elements.refreshIndicator.addEventListener('animationend', (event) => {
 export const applyViewMode = () => {
   const viewMode = new URLSearchParams(window.location.search).get('env');
   if (viewMode) document.documentElement.classList.add(`${viewMode}-view`);
+};
+
+export const initializeResponsiveOptions = () => {
+  const wideLayout = window.matchMedia('(min-width: 601px)');
+  const syncOptions = ({ matches }) => {
+    elements.settingsPanel.open = !matches;
+    elements.settingsSummary.tabIndex = matches ? 0 : -1;
+  };
+
+  syncOptions(wideLayout);
+  wideLayout.addEventListener('change', syncOptions);
 };
 
 export const syncSettingControls = (settings) => {

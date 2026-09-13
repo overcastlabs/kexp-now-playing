@@ -67,6 +67,7 @@ async function load() {
 }
 
 view.applyViewMode();
+view.initializeResponsiveOptions();
 view.onRefresh(load);
 view.onSettingsInput(saveSettings);
 view.onOpenSidePanel(() => {

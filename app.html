@@ -28,46 +28,51 @@
       <button class="refresh button button-error m-l-auto">Retry</button>
     </section>
 
-    <div class="current-art"></div>
-    <section id="current-track" class="current-info stack surface-primary"></section>
-    
-    <section id="history" class="history-section stack hidden">
-      <h4 class="section-label text-style-uppercase text-spacing-lg text-color-muted text-size-xs text-weight-black">Recent Tracks</h4>
-      <ul id="history-list" class="stack"></ul>
-      <a
-        id="full-playlist-link"
-        href="https://kexp.org/playlist/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="button button-secondary"
-      >
-        View Full Playlist &nearr;
-      </a>
-    </section>
+    <main class="content-layout">
+      <div class="current-column">
+        <div class="current-art"></div>
+        <section id="current-track" class="current-info stack surface-primary"></section>
 
-    <section class="settings-section stack">
-      <h4 class="section-label text-style-uppercase text-spacing-lg text-color-muted text-size-xs text-weight-black">Options</h4>
-      <div class="settings-list">
-        <label class="setting-row" for="default-sidebar">
-          <span>Default open as side panel</span>
-          <input id="default-sidebar" type="checkbox" role="switch">
-        </label>
+        <details class="settings-section" open>
+          <summary class="settings-summary section-label text-style-uppercase text-spacing-lg text-color-muted text-size-xs text-weight-black">Options</summary>
+          <div class="settings-list">
+            <label class="setting-row" for="default-sidebar">
+              <span>Default open as side panel</span>
+              <input id="default-sidebar" type="checkbox" role="switch">
+            </label>
 
-        <label class="setting-row" for="history-size">
-          <span>Recent tracks</span>
-          <select id="history-size">
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="40">40</option>
-          </select>
-        </label>
+            <label class="setting-row" for="history-size">
+              <span>Recent tracks</span>
+              <select id="history-size">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="40">40</option>
+              </select>
+            </label>
 
-        <label class="setting-row" for="show-history-comments">
-          <span>Show DJ comments in history</span>
-          <input id="show-history-comments" type="checkbox" role="switch">
-        </label>
+            <label class="setting-row" for="show-history-comments">
+              <span>Show DJ comments in history</span>
+              <input id="show-history-comments" type="checkbox" role="switch">
+            </label>
+          </div>
+        </details>
       </div>
-    </section>
+
+      <section id="history" class="history-section stack hidden">
+        <h4 class="section-label text-style-uppercase text-spacing-lg text-color-muted text-size-xs text-weight-black">Recent Tracks</h4>
+        <ul id="history-list" class="stack"></ul>
+        <a
+          id="full-playlist-link"
+          href="https://kexp.org/playlist/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="button button-secondary"
+        >
+          View Full Playlist &nearr;
+        </a>
+      </section>
+
+    </main>
   </div>
 
   <script type="module" src="app.js"></script>

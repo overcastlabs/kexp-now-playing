@@ -10,7 +10,9 @@ A lightweight Chrome extension for seeing what is currently playing on [KEXP 90.
 - Automatic playlist refresh every 60 seconds
 - Manual refresh and error recovery
 - Popup and persistent side-panel layouts
+- Responsive two-column layout for wide side panels and browser previews
 - Configurable default view, history length, and DJ comments
+- Collapsible options in the wide layout
 - Direct link to the full KEXP playlist
 - Manifest V3 service worker
 
