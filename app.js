@@ -6,6 +6,7 @@ const AIRBREAK_IMAGE = 'images/icon-large.svg';
 const ALBUM_FALLBACK = 'images/album-fallback.svg';
 const AIRBREAK_TYPE = 'airbreak';
 const CLASS_HIDDEN = 'hidden';
+const CLASS_LOADING = 'is-loading';
 const CLASS_REFRESH = 'refresh';
 const EL_LOADER = document.getElementById('loader');
 const EL_ERROR = document.getElementById('error');
@@ -16,6 +17,7 @@ const EL_HISTORY_LIST = document.getElementById('history-list');
 const EL_DEFAULT_SIDEBAR = document.getElementById('default-sidebar');
 const EL_HISTORY_SIZE = document.getElementById('history-size');
 const EL_SHOW_HISTORY_COMMENTS = document.getElementById('show-history-comments');
+const EL_REFRESH_INDICATOR = document.querySelector('.refresh-indicator');
 const REFRESH_INTERVAL = 6e4; // 1min
 const TEXT_STRINGS = {
   now_playing: 'Now Playing',
@@ -23,6 +25,69 @@ const TEXT_STRINGS = {
   unknown_track: 'Unknown Track',
   loading: 'Loading',
 };
+
+const chromeApi = globalThis.chrome;
+const hasExtensionStorage = Boolean(
+  chromeApi?.storage?.local?.get &&
+  chromeApi?.storage?.local?.set &&
+  chromeApi?.storage?.onChanged?.addListener
+);
+const previewStorageKey = 'kexp-now-playing-settings';
+const previewStorageListeners = new Set();
+let previewSettings = {};
+
+if (!hasExtensionStorage) {
+  try {
+    const storedPreviewSettings = JSON.parse(localStorage.getItem(previewStorageKey));
+    if (
+      storedPreviewSettings &&
+      typeof storedPreviewSettings === 'object' &&
+      !Array.isArray(storedPreviewSettings)
+    ) {
+      previewSettings = storedPreviewSettings;
+    }
+  } catch {
+    // Some browser previews disable localStorage. Settings will remain in memory.
+  }
+}
+
+const previewStorage = {
+  async get(defaults = {}) {
+    return { ...defaults, ...previewSettings };
+  },
+  async set(values) {
+    const changes = {};
+
+    for (const [key, newValue] of Object.entries(values)) {
+      const oldValue = previewSettings[key];
+      if (!Object.is(oldValue, newValue)) changes[key] = { oldValue, newValue };
+    }
+
+    previewSettings = { ...previewSettings, ...values };
+    try {
+      localStorage.setItem(previewStorageKey, JSON.stringify(previewSettings));
+    } catch {
+      // Retain the in-memory copy when persistence is unavailable.
+    }
+
+    if (Object.keys(changes).length > 0) {
+      previewStorageListeners.forEach(listener => listener(changes, 'local'));
+    }
+  },
+};
+
+const storage = hasExtensionStorage ? chromeApi.storage.local : previewStorage;
+const storageChanges = hasExtensionStorage ? chromeApi.storage.onChanged : {
+  addListener(listener) {
+    previewStorageListeners.add(listener);
+  },
+};
+const sendExtensionMessage = chromeApi?.runtime?.sendMessage
+  ? message => chromeApi.runtime.sendMessage(message)
+  : async () => {};
+const openSidePanel = chromeApi?.sidePanel?.open && chromeApi?.windows
+  ? () => chromeApi.sidePanel.open({ windowId: chromeApi.windows.WINDOW_ID_CURRENT })
+  : null;
 
 const urlParams = new URLSearchParams(window.location.search);
 const env = urlParams.get('env');
@@ -115,7 +180,7 @@ const failedImageUris = new Set();
 
 const updateAlbumImageCache = async (action, uri) => {
   try {
-    await chrome.runtime.sendMessage({ type: 'album-image-cache', action, uri });
+    await sendExtensionMessage({ type: 'album-image-cache', action, uri });
   } catch {
     // The image can still be displayed if the service worker is unavailable;
     // it just will not be retained in the extension cache for this request.
@@ -275,13 +340,40 @@ let cachedKeys = null;
 let refreshTimer = null;
 let activeRequest = null;
 
+const stopRefreshCountdown = () => {
+  EL_REFRESH_INDICATOR.classList.remove('is-counting');
+};
+
+const startRefreshCountdown = () => {
+  stopRefreshCountdown();
+  EL_REFRESH_INDICATOR.style.setProperty('--refresh-duration', `${REFRESH_INTERVAL}ms`);
+  void EL_REFRESH_INDICATOR.offsetWidth;
+  EL_REFRESH_INDICATOR.classList.add('is-counting');
+};
+
+const showRefreshFeedback = () => {
+  EL_REFRESH_INDICATOR.classList.remove('is-refreshing');
+  void EL_REFRESH_INDICATOR.offsetWidth;
+  EL_REFRESH_INDICATOR.classList.add('is-refreshing');
+};
+
+EL_REFRESH_INDICATOR.addEventListener('animationend', (event) => {
+  if (event.animationName === 'refresh-feedback') {
+    EL_REFRESH_INDICATOR.classList.remove('is-refreshing');
+  }
+});
+
 const scheduleRefresh = () => {
   clearTimeout(refreshTimer);
   refreshTimer = setTimeout(load, REFRESH_INTERVAL);
+  startRefreshCountdown();
 };
 
 async function load() {
   clearTimeout(refreshTimer);
+  stopRefreshCountdown();
+  showRefreshFeedback();
+  EL_LOADER.classList.add(CLASS_LOADING);
   activeRequest?.abort();
   const request = new AbortController();
   activeRequest = request;
@@ -319,34 +411,33 @@ async function load() {
   } finally {
     if (activeRequest === request) {
       activeRequest = null;
-      EL_LOADER.classList.add(CLASS_HIDDEN);
+      EL_LOADER.classList.remove(CLASS_LOADING);
       scheduleRefresh();
     }
   }
 }
 
 document.querySelectorAll(`.${CLASS_REFRESH}`).forEach(el => el.addEventListener('click', () => {
-  EL_LOADER.classList.remove(CLASS_HIDDEN);
   load();
 }));
 
 EL_DEFAULT_SIDEBAR.addEventListener('change', () => {
-  chrome.storage.local.set({
+  storage.set({
     defaultView: EL_DEFAULT_SIDEBAR.checked ? 'sidebar' : 'popup',
   });
 });
 
 EL_HISTORY_SIZE.addEventListener('change', () => {
-  chrome.storage.local.set({ historySize: Number(EL_HISTORY_SIZE.value) });
+  storage.set({ historySize: Number(EL_HISTORY_SIZE.value) });
 });
 
 EL_SHOW_HISTORY_COMMENTS.addEventListener('change', () => {
-  chrome.storage.local.set({
+  storage.set({
     showHistoryComments: EL_SHOW_HISTORY_COMMENTS.checked,
   });
 });
 
-chrome.storage.onChanged.addListener((changes, areaName) => {
+storageChanges.addListener((changes, areaName) => {
   if (areaName !== 'local') return;
 
   const previousSettings = settings;
@@ -365,13 +456,14 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     cachedKeys = null;
     historyNodeCache.clear();
     EL_HISTORY_LIST.replaceChildren();
-    EL_LOADER.classList.remove(CLASS_HIDDEN);
     load();
   }
 });
 
 document.querySelector('.sidebar-button')?.addEventListener('click', () => {
-  chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT })
+  if (!openSidePanel) return;
+
+  openSidePanel()
     .then(() => window.close())
     .catch((err) => {
       console.error('Unable to open the side panel', err);
@@ -379,7 +471,7 @@ document.querySelector('.sidebar-button')?.addEventListener('click', () => {
 });
 
 const initialize = async () => {
-  settings = normalizeSettings(await chrome.storage.local.get(SETTINGS_DEFAULTS));
+  settings = normalizeSettings(await storage.get(SETTINGS_DEFAULTS));
   syncSettingControls();
 
   renderCurrentTrack({

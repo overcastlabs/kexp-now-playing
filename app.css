@@ -187,6 +187,105 @@ blockquote {
   background: rgba(255, 255, 255, 0.15);
 }
 
+@property --refresh-sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --refresh-head {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --refresh-tail {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.refresh-indicator {
+  --refresh-duration: 60000ms;
+  --refresh-sweep: 0deg;
+  position: relative;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.sidebar-view .refresh-indicator {
+  display: grid;
+}
+
+.refresh-indicator::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: 50%;
+  background: conic-gradient(
+    transparent 0deg var(--refresh-sweep),
+    rgba(255, 255, 255, .35) var(--refresh-sweep) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.refresh-indicator.is-counting::before {
+  animation: refresh-countdown var(--refresh-duration) linear forwards;
+}
+
+.refresh-icon {
+  position: relative;
+  display: inline-block;
+  opacity: .75;
+  transition: transform .15s ease-out;
+}
+
+.refresh-indicator.is-refreshing .refresh-icon {
+  transform: scale(.85);
+  opacity: .5;
+}
+
+.refresh-indicator.is-refreshing::before {
+  background: conic-gradient(
+    transparent 0deg var(--refresh-tail),
+    rgba(255, 255, 255, .35) var(--refresh-tail) var(--refresh-head),
+    transparent var(--refresh-head) 360deg
+  );
+  animation: refresh-feedback .7s linear 1.5;
+}
+
+@keyframes refresh-countdown {
+  to { --refresh-sweep: 360deg; }
+}
+
+@keyframes refresh-feedback {
+  0% {
+    --refresh-head: 0deg;
+    --refresh-tail: 0deg;
+  }
+  50% {
+    --refresh-head: 360deg;
+    --refresh-tail: 0deg;
+  }
+  100% {
+    --refresh-head: 360deg;
+    --refresh-tail: 360deg;
+  }
+}
+
 /* ── Typography ────────────────────────────────── */
 .text-color-primary {
   color: var(--text-primary);
@@ -350,6 +449,20 @@ header {
   position: absolute;
   bottom: 0;
   left: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity .2s ease,
+    visibility 0s linear .2s;
+}
+
+#loader.is-loading {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity .2s ease .35s,
+    visibility 0s linear;
 }
 
 .refresh,
