@@ -5,7 +5,7 @@ A lightweight Chrome extension for seeing what is currently playing on [KEXP 90.
 ## Features
 
 - Current song, artist, album, release year, and DJ comment
-- Ten recently played tracks with relative timestamps
+- Configurable playlist history with relative timestamps
 - Album artwork with a local fallback and bounded browser cache
 - Automatic playlist refresh every 60 seconds
 - Manual refresh and error recovery
@@ -39,8 +39,11 @@ The extension is written in plain HTML, CSS, and JavaScript:
 ```text
 .
 ├── app.html                 Popup and side-panel markup
-├── app.css                  Shared interface styles
-├── app.js                   Playlist fetching and rendering
+├── app.css                  Stylesheet entry point
+├── app.js                   Application initialization and refresh orchestration
+├── config.js                Configuration shared by both runtime contexts
+├── js/                      Platform, settings, data, media, and view modules
+├── styles/                  Foundation, utility, control, and content styles
 ├── service-worker.js        Album-art caching
 ├── manifest.json            Chrome extension manifest
 ├── images/                  Icons, logos, and fallback artwork
@@ -49,7 +52,9 @@ The extension is written in plain HTML, CSS, and JavaScript:
 └── .github/workflows/       Release and Chrome Web Store automation
 ```
 
-Playlist data comes from the [KEXP public API](https://api.kexp.org/v2/plays/). The UI requests the eleven latest entries: one current play and ten history items.
+Playlist data comes from the [KEXP public API](https://api.kexp.org/v2/plays/). The UI requests the current play plus the configured number of history items.
+
+The app uses native browser modules and does not require a compilation step. `app.html` can also run in a local browser preview; extension APIs are replaced there by a small `localStorage`-backed adapter.
 
 ### Permissions
 
@@ -93,6 +98,6 @@ Chrome Web Store and Google Cloud authentication require one-time repository con
 
 ## Data and caching
 
-The popup fetches current playlist information directly from KEXP. Remote album images are staged by the service worker and retained only after Chrome confirms that they decode successfully. The cache keeps at most 15 confirmed images and removes failed or expired entries.
+The popup fetches current playlist information directly from KEXP. Remote album images are staged by the service worker and retained only after Chrome confirms that they decode successfully. The cache size follows the selected history length with a five-image buffer and removes failed or expired entries.
 
 No analytics or advertising code is included in this repository.

@@ -1,0 +1,272 @@
+.button {
+  display: block;
+  padding: .75em 1em;
+  background: var(--surface-primary);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  font-size: var(--text-size-sm);
+  font-weight: var(--text-weight-bold);
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-sm);
+}
+
+.button:hover {
+  text-decoration: none;
+}
+
+.button-primary {
+  background: var(--color-brand);
+  color: var(--text-primary);
+}
+
+.button-primary:hover {
+  background: var(--surface-secondary);
+  border-color: var(--color-brand);
+}
+
+.button-secondary {
+  background: var(--surface-secondary);
+  text-align: center;
+}
+
+.button-secondary:hover {
+  box-shadow: var(--button-overlay);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
+.button-error {
+  border: none;
+  background-color: var(--color-error-alt);
+}
+
+.button-error:hover {
+  box-shadow: var(--button-overlay);
+}
+
+.text-button {
+  color: currentColor;
+  background: none;
+  font-size: 1.5em;
+  border: none;
+  cursor: pointer;
+  padding: .1em .25em;
+  border-radius: .2em;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.text-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+@property --refresh-sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --refresh-head {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --refresh-tail {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.refresh-indicator {
+  --refresh-duration: 60000ms;
+  --refresh-sweep: 0deg;
+  position: relative;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.sidebar-view .refresh-indicator {
+  display: grid;
+}
+
+.refresh-indicator::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: 50%;
+  background: conic-gradient(
+    transparent 0deg var(--refresh-sweep),
+    rgba(255, 255, 255, .35) var(--refresh-sweep) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.refresh-indicator.is-counting::before {
+  animation: refresh-countdown var(--refresh-duration) linear forwards;
+}
+
+.refresh-icon {
+  position: relative;
+  display: inline-block;
+  opacity: .75;
+  transition: transform .15s ease-out;
+}
+
+.refresh-indicator.is-refreshing .refresh-icon {
+  transform: scale(.85);
+  opacity: .5;
+}
+
+.refresh-indicator.is-refreshing::before {
+  background: conic-gradient(
+    transparent 0deg var(--refresh-tail),
+    rgba(255, 255, 255, .35) var(--refresh-tail) var(--refresh-head),
+    transparent var(--refresh-head) 360deg
+  );
+  animation: refresh-feedback .7s linear 1.5;
+}
+
+@keyframes refresh-countdown {
+  to { --refresh-sweep: 360deg; }
+}
+
+@keyframes refresh-feedback {
+  0% {
+    --refresh-head: 0deg;
+    --refresh-tail: 0deg;
+  }
+  50% {
+    --refresh-head: 360deg;
+    --refresh-tail: 0deg;
+  }
+  100% {
+    --refresh-head: 360deg;
+    --refresh-tail: 360deg;
+  }
+}
+
+.loader {
+  position: relative;
+  width: 100%;
+  height: .25rem;
+  background-color: var(--color-brand-alt);
+  overflow: hidden;
+}
+
+.loader::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  top: 0;
+  width: 80%;
+  background-color: rgba(255, 255, 255, 0.5);
+  animation: mui-linear-animation 2s infinite linear;
+  transform-origin: left;
+}
+
+@keyframes mui-linear-animation {
+  0% { transform: translateX(-100%) scaleX(.8); }
+  50% { transform: translateX(50%) scaleX(.5); }
+  100% { transform: translateX(200%) scaleX(1.1); }
+}
+
+#loader {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity .2s ease,
+    visibility 0s linear .2s;
+}
+
+#loader.is-loading {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity .2s ease .35s,
+    visibility 0s linear;
+}
+
+.refresh,
+.sidebar-button {
+  display: none;
+}
+
+.sidebar-view .refresh,
+.popup-view .sidebar-button {
+  display: block;
+}
+
+.setting-row select {
+  min-width: 4rem;
+  padding: .25rem 1.5rem .25rem .5rem;
+  border: 1px solid var(--surface-secondary);
+  border-radius: var(--border-radius);
+  background: var(--bg);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.setting-row input[type='checkbox'] {
+  appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 1.125rem;
+  border: 1px solid var(--surface-secondary);
+  border-radius: 1rem;
+  background: var(--bg);
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+
+.setting-row input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  width: .75rem;
+  height: .75rem;
+  top: .125rem;
+  left: .125rem;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: transform .15s, background-color .15s;
+}
+
+.setting-row input[type='checkbox']:checked {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+}
+
+.setting-row input[type='checkbox']:checked::after {
+  transform: translateX(.875rem);
+  background: var(--bg);
+}
+
+.setting-row select:focus-visible,
+.setting-row input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}

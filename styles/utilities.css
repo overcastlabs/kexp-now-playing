@@ -1,0 +1,155 @@
+.text-color-primary {
+  color: var(--text-primary);
+}
+
+.text-color-secondary {
+  color: var(--text-secondary);
+}
+
+.text-color-muted {
+  color: var(--text-muted);
+}
+
+.text-size-xl {
+  font-size: var(--text-size-xl);
+}
+
+.text-size-lg {
+  font-size: var(--text-size-lg);
+}
+
+.text-size-md {
+  font-size: var(--text-size-md);
+}
+
+.text-size-sm {
+  font-size: var(--text-size-sm);
+}
+
+.text-size-xs {
+  font-size: var(--text-size-xs);
+}
+
+.text-weight-bold {
+  font-weight: var(--text-weight-bold);
+}
+
+.text-weight-black {
+  font-weight: var(--text-weight-black);
+}
+
+.text-spacing-sm {
+  letter-spacing: var(--letter-spacing-sm);
+}
+
+.text-spacing-md {
+  letter-spacing: var(--letter-spacing-md);
+}
+
+.text-spacing-lg {
+  letter-spacing: var(--letter-spacing-lg);
+}
+
+.text-style-italic {
+  font-style: italic;
+}
+
+.text-style-uppercase {
+  text-transform: uppercase;
+}
+
+.text-overflow-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stack--horizontal {
+  flex-direction: row;
+}
+
+.stack--center {
+  align-items: center;
+}
+
+.m-l-auto {
+  margin-left: auto;
+}
+
+.m-t-xs {
+  margin-top: .5rem;
+}
+
+.m-t-sm {
+  margin-top: 1rem;
+}
+
+.m-t-md {
+  margin-top: 1.5rem;
+}
+
+.m-t-lg {
+  margin-top: 2rem;
+}
+
+.m-t-xl {
+  margin-top: 2.5rem;
+}
+
+.m-b-xs {
+  margin-bottom: .5rem;
+}
+
+.m-b-sm {
+  margin-bottom: 1rem;
+}
+
+.m-b-md {
+  margin-bottom: 1.5rem;
+}
+
+.m-b-lg {
+  margin-bottom: 2rem;
+}
+
+.m-b-xl {
+  margin-bottom: 2.5rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.img-fullsize {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.img-aspect-square {
+  aspect-ratio: 1;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.pulse {
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.spinning {
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

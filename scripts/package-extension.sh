@@ -25,6 +25,21 @@ for file in "${required_files[@]}"; do
   fi
 done
 
+module_files=()
+while IFS= read -r file; do
+  module_files+=("$file")
+done < <(find js -type f -name '*.js' -print | sort)
+
+style_files=()
+while IFS= read -r file; do
+  style_files+=("$file")
+done < <(find styles -type f -name '*.css' -print | sort)
+
+if [[ ${#module_files[@]} -eq 0 || ${#style_files[@]} -eq 0 ]]; then
+  echo "JavaScript modules or component styles are missing" >&2
+  exit 1
+fi
+
 image_files=()
 while IFS= read -r file; do
   image_files+=("$file")
@@ -37,5 +52,9 @@ fi
 
 mkdir -p "$(dirname "$archive_path")"
 rm -f "$archive_path"
-zip -q -9 "$archive_path" "${required_files[@]}" "${image_files[@]}"
+zip -q -9 "$archive_path" \
+  "${required_files[@]}" \
+  "${module_files[@]}" \
+  "${style_files[@]}" \
+  "${image_files[@]}"
 zip -T "$archive_path"

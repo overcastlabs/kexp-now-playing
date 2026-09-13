@@ -1,485 +1,101 @@
-'use strict';
+import { SETTINGS_DEFAULTS } from './config.js';
+import { openSidePanel } from './js/platform.js';
+import { fetchPlaylist } from './js/playlist.js';
+import {
+  loadSettings,
+  normalizeSettings,
+  observeSettings,
+  saveSettings,
+} from './js/settings.js';
+import * as view from './js/view.js';
 
-const { HISTORY_SIZE_OPTIONS, SETTINGS_DEFAULTS } = APP_CONFIG;
-const API_ROOT = 'https://api.kexp.org/v2/plays/';
-const AIRBREAK_IMAGE = 'images/icon-large.svg';
-const ALBUM_FALLBACK = 'images/album-fallback.svg';
-const AIRBREAK_TYPE = 'airbreak';
-const CLASS_HIDDEN = 'hidden';
-const CLASS_LOADING = 'is-loading';
-const CLASS_REFRESH = 'refresh';
-const EL_LOADER = document.getElementById('loader');
-const EL_ERROR = document.getElementById('error');
-const EL_CURRENT_ART = document.querySelector('.current-art');
-const EL_CURRENT_TRACK = document.getElementById('current-track');
-const EL_HISTORY = document.getElementById('history');
-const EL_HISTORY_LIST = document.getElementById('history-list');
-const EL_DEFAULT_SIDEBAR = document.getElementById('default-sidebar');
-const EL_HISTORY_SIZE = document.getElementById('history-size');
-const EL_SHOW_HISTORY_COMMENTS = document.getElementById('show-history-comments');
-const EL_REFRESH_INDICATOR = document.querySelector('.refresh-indicator');
-const REFRESH_INTERVAL = 6e4; // 1min
-const TEXT_STRINGS = {
-  now_playing: 'Now Playing',
-  air_break: 'Air Break',
-  unknown_track: 'Unknown Track',
-  loading: 'Loading',
-};
-
-const chromeApi = globalThis.chrome;
-const hasExtensionStorage = Boolean(
-  chromeApi?.storage?.local?.get &&
-  chromeApi?.storage?.local?.set &&
-  chromeApi?.storage?.onChanged?.addListener
-);
-const previewStorageKey = 'kexp-now-playing-settings';
-const previewStorageListeners = new Set();
-let previewSettings = {};
-
-if (!hasExtensionStorage) {
-  try {
-    const storedPreviewSettings = JSON.parse(localStorage.getItem(previewStorageKey));
-    if (
-      storedPreviewSettings &&
-      typeof storedPreviewSettings === 'object' &&
-      !Array.isArray(storedPreviewSettings)
-    ) {
-      previewSettings = storedPreviewSettings;
-    }
-  } catch {
-    // Some browser previews disable localStorage. Settings will remain in memory.
-  }
-}
-
-const previewStorage = {
-  async get(defaults = {}) {
-    return { ...defaults, ...previewSettings };
-  },
-  async set(values) {
-    const changes = {};
-
-    for (const [key, newValue] of Object.entries(values)) {
-      const oldValue = previewSettings[key];
-      if (!Object.is(oldValue, newValue)) changes[key] = { oldValue, newValue };
-    }
-
-    previewSettings = { ...previewSettings, ...values };
-    try {
-      localStorage.setItem(previewStorageKey, JSON.stringify(previewSettings));
-    } catch {
-      // Retain the in-memory copy when persistence is unavailable.
-    }
-
-    if (Object.keys(changes).length > 0) {
-      previewStorageListeners.forEach(listener => listener(changes, 'local'));
-    }
-  },
-};
-
-const storage = hasExtensionStorage ? chromeApi.storage.local : previewStorage;
-const storageChanges = hasExtensionStorage ? chromeApi.storage.onChanged : {
-  addListener(listener) {
-    previewStorageListeners.add(listener);
-  },
-};
-const sendExtensionMessage = chromeApi?.runtime?.sendMessage
-  ? message => chromeApi.runtime.sendMessage(message)
-  : async () => {};
-const openSidePanel = chromeApi?.sidePanel?.open && chromeApi?.windows
-  ? () => chromeApi.sidePanel.open({ windowId: chromeApi.windows.WINDOW_ID_CURRENT })
-  : null;
-
-const urlParams = new URLSearchParams(window.location.search);
-const env = urlParams.get('env');
-let settings = { ...SETTINGS_DEFAULTS };
-
-if (env) {
-  document.documentElement.classList.add(`${env}-view`);
-}
-
-const normalizeSettings = (storedSettings) => {
-  const parsedHistorySize = Number(storedSettings.historySize);
-  return {
-    defaultView: storedSettings.defaultView === 'sidebar' ? 'sidebar' : 'popup',
-    historySize: HISTORY_SIZE_OPTIONS.includes(parsedHistorySize)
-      ? parsedHistorySize
-      : SETTINGS_DEFAULTS.historySize,
-    showHistoryComments: storedSettings.showHistoryComments === true,
-  };
-};
-
-const syncSettingControls = () => {
-  EL_DEFAULT_SIDEBAR.checked = settings.defaultView === 'sidebar';
-  EL_HISTORY_SIZE.value = String(settings.historySize);
-  EL_SHOW_HISTORY_COMMENTS.checked = settings.showHistoryComments;
-};
-
-const getPlaylistUrl = () => {
-  const url = new URL(API_ROOT);
-  url.search = new URLSearchParams({
-    limit: String(settings.historySize + 1),
-    ordering: '-airdate',
-  });
-  return url;
-};
-
-const esc = (str) => {
-  const div = document.createElement('div');
-  div.textContent = str || '';
-  return div.innerHTML.replace(
-    /https?:\/\/[^\s<>"]+/g,
-    url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
-  );
-};
-
-const formatTime = (dateStr) => {
-  if (typeof Temporal !== 'undefined') {
-    const now = Temporal.Now.plainDateTimeISO().round('second');
-    let time = Temporal.PlainDateTime.from(dateStr);
-    const duration = now.since(time, {
-      largestUnit: 'hours',
-      smallestUnit: 'minutes',
-    });
-    return duration.toLocaleString();
-  } else {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const diffMin = Math.floor((Date.now() - date) / 60000);
-    if (diffMin < 1) return 'just now';
-    if (diffMin < 60) return `${diffMin}m ago`;
-    if (diffMin < 120) return '1h ago';
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  }
-};
-
-const yearFromDateString = (dateStr) => {
-  const date = new Date(dateStr);
-  if (date instanceof Date && !isNaN(date)) {
-    return date.getFullYear();
-  } else {
-    return '';
-  }
-};
-
-const isAirbreak = (play) => play.play_type === AIRBREAK_TYPE;
-
-const hydratePlay = (rawPlay) => ({
-  id: rawPlay.id ?? rawPlay.airdate,
-  airdate: rawPlay.airdate,
-  song: isAirbreak(rawPlay) ? TEXT_STRINGS.air_break : esc(rawPlay.song) || TEXT_STRINGS.unknown_track,
-  artist: esc(rawPlay.artist),
-  album: esc(rawPlay.album),
-  year: esc(rawPlay.release_date),
-  comment: esc(rawPlay.comment),
-  image_uri: isAirbreak(rawPlay)
-    ? AIRBREAK_IMAGE
-    : rawPlay.image_uri || rawPlay.thumbnail_uri,
+const REFRESH_INTERVAL = 6e4;
+const LOADING_TRACK = Object.freeze({
+  id: '-1',
+  song: 'Loading',
+  artist: '',
+  image_uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
 });
 
-const failedImageUris = new Set();
-
-const updateAlbumImageCache = async (action, uri) => {
-  try {
-    await sendExtensionMessage({ type: 'album-image-cache', action, uri });
-  } catch {
-    // The image can still be displayed if the service worker is unavailable;
-    // it just will not be retained in the extension cache for this request.
-  }
-};
-
-const showAlbumImage = async (albumArt, uri, forceRefresh = false) => {
-  const img = albumArt.querySelector('img');
-  const requestId = crypto.randomUUID();
-  albumArt.dataset.imageUri = uri || '';
-  albumArt.dataset.requestId = requestId;
-  albumArt.dataset.state = uri ? 'loading' : 'fallback';
-
-  if (!uri) {
-    img.src = ALBUM_FALLBACK;
-    albumArt.classList.remove('img-loader');
-    return;
-  }
-
-  albumArt.classList.add('img-loader');
-
-  if (uri.startsWith('images/') || uri.startsWith('data:')) {
-    const localImage = new Image();
-    localImage.onload = () => {
-      if (albumArt.dataset.requestId !== requestId) return;
-      img.src = uri;
-      albumArt.dataset.state = 'loaded';
-      albumArt.classList.remove('img-loader');
-    };
-    localImage.onerror = () => {
-      if (albumArt.dataset.requestId !== requestId) return;
-      img.src = ALBUM_FALLBACK;
-      albumArt.dataset.state = 'error';
-      albumArt.classList.remove('img-loader');
-    };
-    localImage.src = uri;
-    return;
-  }
-
-  if (forceRefresh) await updateAlbumImageCache('evict', uri);
-
-  const remoteImage = new Image();
-  remoteImage.onload = async () => {
-    if (albumArt.dataset.requestId !== requestId) return;
-
-    // The service worker stages the opaque response. Promote it only after the
-    // browser confirms that it decoded as an image, then use that cached copy
-    // for the visible element.
-    await updateAlbumImageCache('confirm', uri);
-    if (albumArt.dataset.requestId !== requestId) return;
-
-    img.src = uri;
-    albumArt.dataset.state = 'loaded';
-    failedImageUris.delete(uri);
-    albumArt.classList.remove('img-loader');
-  };
-  remoteImage.onerror = async () => {
-    if (albumArt.dataset.requestId !== requestId) return;
-
-    await updateAlbumImageCache('evict', uri);
-    if (albumArt.dataset.requestId !== requestId) return;
-
-    img.src = ALBUM_FALLBACK;
-    albumArt.dataset.state = 'error';
-    failedImageUris.add(uri);
-    albumArt.classList.remove('img-loader');
-  };
-  remoteImage.src = uri;
-};
-
-// One album-art element per play, shared across current-track and history.
-// appendChild moves the element rather than cloning it, so the already-loaded
-// image travels from current-track → history with zero network requests.
-const imgElementCache = new Map(); // play.id → album-art element
-
-const getImg = (play) => {
-  if (!imgElementCache.has(play.id)) {
-    const albumArt = document.createElement('div');
-    albumArt.className = 'album-art img-loader surface-secondary img-aspect-square';
-
-    const img = document.createElement('img');
-    img.src = ALBUM_FALLBACK;
-    img.alt = `${play.song} ${play.artist}`;
-    img.className = 'img-fullsize img-aspect-square';
-    albumArt.appendChild(img);
-
-    showAlbumImage(albumArt, play.image_uri);
-
-    imgElementCache.set(play.id, albumArt);
-  }
-  return imgElementCache.get(play.id);
-};
-
-const renderCurrentTrack = (play) => {
-  EL_CURRENT_TRACK.innerHTML = `
-    <h1 class="text-size-xl text-weight-black">${play.song}</h1>
-    ${play.artist ? `<h2 class="text-color-secondary text-weight-bold">${play.artist}</h2>` : ''}
-    ${play.album ? `<h3 class="text-size-sm text-style-italic text-color-muted text-weight-bold">${play.album}${play.year ? ' &ndash; ' + yearFromDateString(play.year) : ''}</h3>` : ''}
-    ${play.comment ? `<blockquote class="text-size-sm m-t-sm">${play.comment}</blockquote>` : ''}
-  `;
-  EL_CURRENT_ART.replaceChildren(getImg(play));
-};
-
-const historyNodeCache = new Map(); // play.id → <li>
-
-const createHistoryNode = (play) => {
-  const li = document.createElement('li');
-  li.className = 'history-item stack';
-  li.innerHTML = `
-    <div class="stack stack--horizontal stack--center">
-      <div class="history-art"></div>
-      <div class="history-meta">
-        <h5 class="text-size-md text-weight-bold text-overflow-ellipsis">${play.song}</h5>
-        ${play.artist ? `<h6 class="text-color-secondary text-size-sm text-overflow-ellipsis">${play.artist}</h6>` : ''}
-      </div>
-      <div class="history-time text-color-muted text-size-sm text-style-italic">${formatTime(play.airdate)}</div>
-    </div>
-    ${settings.showHistoryComments && play.comment ? `<blockquote class="history-comment text-size-sm m-b-sm">${play.comment}</blockquote>` : ''}
-  `;
-  li.querySelector('.history-art').appendChild(getImg(play));
-  li.title = `${play.song} - ${play.artist}`;
-  return li;
-};
-
-const renderHistory = (plays) => {
-  const nodes = plays.map(play => {
-    if (!historyNodeCache.has(play.id)) historyNodeCache.set(play.id, createHistoryNode(play));
-    const node = historyNodeCache.get(play.id);
-    node.querySelector('.history-time').textContent = formatTime(play.airdate);
-    return node;
-  });
-
-  // Reconcile positions without replacing existing nodes
-  nodes.forEach((node, i) => {
-    if (EL_HISTORY_LIST.children[i] !== node) EL_HISTORY_LIST.insertBefore(node, EL_HISTORY_LIST.children[i] ?? null);
-  });
-  while (EL_HISTORY_LIST.children.length > nodes.length) EL_HISTORY_LIST.removeChild(EL_HISTORY_LIST.lastChild);
-};
-
-const refreshFailedAlbumImages = (plays) => {
-  const activeUris = new Set(plays.map(play => play.image_uri).filter(Boolean));
-  for (const uri of failedImageUris) {
-    if (!activeUris.has(uri)) failedImageUris.delete(uri);
-  }
-
-  plays.forEach(play => {
-    const albumArt = imgElementCache.get(play.id);
-    if (!albumArt) return;
-
-    const imageChanged = albumArt.dataset.imageUri !== (play.image_uri || '');
-    const shouldRetry = failedImageUris.has(play.image_uri);
-    if (imageChanged || shouldRetry) showAlbumImage(albumArt, play.image_uri, shouldRetry);
-  });
-};
-
+let settings = { ...SETTINGS_DEFAULTS };
 let cachedKeys = null;
 let refreshTimer = null;
 let activeRequest = null;
 
-const stopRefreshCountdown = () => {
-  EL_REFRESH_INDICATOR.classList.remove('is-counting');
-};
-
-const startRefreshCountdown = () => {
-  stopRefreshCountdown();
-  EL_REFRESH_INDICATOR.style.setProperty('--refresh-duration', `${REFRESH_INTERVAL}ms`);
-  void EL_REFRESH_INDICATOR.offsetWidth;
-  EL_REFRESH_INDICATOR.classList.add('is-counting');
-};
-
-const showRefreshFeedback = () => {
-  EL_REFRESH_INDICATOR.classList.remove('is-refreshing');
-  void EL_REFRESH_INDICATOR.offsetWidth;
-  EL_REFRESH_INDICATOR.classList.add('is-refreshing');
-};
-
-EL_REFRESH_INDICATOR.addEventListener('animationend', (event) => {
-  if (event.animationName === 'refresh-feedback') {
-    EL_REFRESH_INDICATOR.classList.remove('is-refreshing');
-  }
-});
-
 const scheduleRefresh = () => {
   clearTimeout(refreshTimer);
   refreshTimer = setTimeout(load, REFRESH_INTERVAL);
-  startRefreshCountdown();
+  view.startRefreshCountdown(REFRESH_INTERVAL);
 };
 
 async function load() {
   clearTimeout(refreshTimer);
-  stopRefreshCountdown();
-  showRefreshFeedback();
-  EL_LOADER.classList.add(CLASS_LOADING);
+  view.stopRefreshCountdown();
+  view.showRefreshFeedback();
+  view.setLoading(true);
+
   activeRequest?.abort();
   const request = new AbortController();
   activeRequest = request;
 
   try {
-    const res = await fetch(getPlaylistUrl(), { signal: request.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const plays = data.results.map(hydratePlay) || [];
-
-    if (plays.length === 0) throw new Error('No plays returned');
-
-    // Look for updated keys and render
+    const plays = await fetchPlaylist({
+      historySize: settings.historySize,
+      signal: request.signal,
+    });
     const newKeys = plays.map(play => play.id);
     const currentChanged = !cachedKeys || newKeys[0] !== cachedKeys[0];
-    if (currentChanged) renderCurrentTrack(plays[0]);
-    renderHistory(plays.slice(1));
-    refreshFailedAlbumImages(plays);
+
+    if (currentChanged) view.renderCurrentTrack(plays[0]);
+    view.renderHistory(plays.slice(1), settings.showHistoryComments);
+    view.refreshAlbumImages(plays);
+    view.prunePlayNodes(new Set(newKeys));
     cachedKeys = newKeys;
 
-    // Prune keys no longer in the window
-    const activeKeys = new Set(newKeys);
-    for (const k of imgElementCache.keys()) {
-      if (!activeKeys.has(k)) {
-        imgElementCache.delete(k);
-        historyNodeCache.delete(k);
-      }
-    }
-
-    EL_HISTORY.classList.remove(CLASS_HIDDEN);
-    EL_ERROR.classList.add(CLASS_HIDDEN);
-  } catch (err) {
-    if (err.name === 'AbortError') return;
-    EL_ERROR.classList.remove(CLASS_HIDDEN);
+    view.showHistory();
+    view.setErrorVisible(false);
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    view.setErrorVisible(true);
   } finally {
     if (activeRequest === request) {
       activeRequest = null;
-      EL_LOADER.classList.remove(CLASS_LOADING);
+      view.setLoading(false);
       scheduleRefresh();
     }
   }
 }
 
-document.querySelectorAll(`.${CLASS_REFRESH}`).forEach(el => el.addEventListener('click', () => {
-  load();
-}));
+view.applyViewMode();
+view.onRefresh(load);
+view.onSettingsInput(saveSettings);
+view.onOpenSidePanel(() => {
+  if (!openSidePanel) return;
 
-EL_DEFAULT_SIDEBAR.addEventListener('change', () => {
-  storage.set({
-    defaultView: EL_DEFAULT_SIDEBAR.checked ? 'sidebar' : 'popup',
-  });
+  openSidePanel()
+    .then(view.closeView)
+    .catch(error => console.error('Unable to open the side panel', error));
 });
 
-EL_HISTORY_SIZE.addEventListener('change', () => {
-  storage.set({ historySize: Number(EL_HISTORY_SIZE.value) });
-});
-
-EL_SHOW_HISTORY_COMMENTS.addEventListener('change', () => {
-  storage.set({
-    showHistoryComments: EL_SHOW_HISTORY_COMMENTS.checked,
-  });
-});
-
-storageChanges.addListener((changes, areaName) => {
-  if (areaName !== 'local') return;
-
+observeSettings((changedSettings) => {
   const previousSettings = settings;
-  const nextSettings = { ...settings };
-  for (const key of Object.keys(SETTINGS_DEFAULTS)) {
-    if (changes[key]) nextSettings[key] = changes[key].newValue;
-  }
-
-  settings = normalizeSettings(nextSettings);
-  syncSettingControls();
+  settings = normalizeSettings({ ...settings, ...changedSettings });
+  view.syncSettingControls(settings);
 
   if (
     settings.historySize !== previousSettings.historySize ||
     settings.showHistoryComments !== previousSettings.showHistoryComments
   ) {
     cachedKeys = null;
-    historyNodeCache.clear();
-    EL_HISTORY_LIST.replaceChildren();
+    view.resetHistory();
     load();
   }
 });
 
-document.querySelector('.sidebar-button')?.addEventListener('click', () => {
-  if (!openSidePanel) return;
-
-  openSidePanel()
-    .then(() => window.close())
-    .catch((err) => {
-      console.error('Unable to open the side panel', err);
-    });
-});
-
 const initialize = async () => {
-  settings = normalizeSettings(await storage.get(SETTINGS_DEFAULTS));
-  syncSettingControls();
-
-  renderCurrentTrack({
-    id: '-1',
-    song: TEXT_STRINGS.loading,
-    image_uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-  });
-
+  settings = await loadSettings();
+  view.syncSettingControls(settings);
+  view.renderCurrentTrack(LOADING_TRACK);
   load();
 };
 

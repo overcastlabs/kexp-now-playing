@@ -1,13 +1,9 @@
-'use strict';
-
-importScripts('config.js');
-
-const {
+import {
   ALBUM_IMAGE_CACHE_BUFFER,
   HISTORY_SIZE_OPTIONS,
   POPUP_PATH,
   SETTINGS_DEFAULTS,
-} = APP_CONFIG;
+} from './config.js';
 const ALBUM_IMAGE_CACHE = 'album-images-v2';
 const ALBUM_IMAGE_STAGE_CACHE = 'album-images-stage-v2';
 const ALBUM_IMAGE_CACHE_ORDER_KEY = 'albumImageCacheOrder';
