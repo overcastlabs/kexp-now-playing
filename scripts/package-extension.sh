@@ -11,6 +11,7 @@ fi
 
 required_files=(
   manifest.json
+  config.js
   service-worker.js
   app.html
   app.css

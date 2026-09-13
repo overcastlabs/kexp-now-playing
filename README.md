@@ -10,6 +10,7 @@ A lightweight Chrome extension for seeing what is currently playing on [KEXP 90.
 - Automatic playlist refresh every 60 seconds
 - Manual refresh and error recovery
 - Popup and persistent side-panel layouts
+- Configurable default view, history length, and DJ comments
 - Direct link to the full KEXP playlist
 - Manifest V3 service worker
 
@@ -57,7 +58,7 @@ The extension requests only the capabilities used by its interface:
 | Permission | Purpose |
 | --- | --- |
 | `sidePanel` | Opens the persistent Chrome side panel |
-| `storage` | Tracks the bounded album-art cache order |
+| `storage` | Saves display preferences and tracks the bounded album-art cache order |
 | `https://*.archive.org/*` | Retrieves and caches album artwork hosted by Internet Archive |
 
 ## Package the extension

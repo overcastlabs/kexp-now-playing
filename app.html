@@ -42,8 +42,33 @@
         View Full Playlist &nearr;
       </a>
     </section>
+
+    <section class="settings-section stack">
+      <h4 class="section-label text-style-uppercase text-spacing-lg text-color-muted text-size-xs text-weight-black">Options</h4>
+      <div class="settings-list">
+        <label class="setting-row" for="default-sidebar">
+          <span>Default open as side panel</span>
+          <input id="default-sidebar" type="checkbox" role="switch">
+        </label>
+
+        <label class="setting-row" for="history-size">
+          <span>Recent tracks</span>
+          <select id="history-size">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="40">40</option>
+          </select>
+        </label>
+
+        <label class="setting-row" for="show-history-comments">
+          <span>Show DJ comments in history</span>
+          <input id="show-history-comments" type="checkbox" role="switch">
+        </label>
+      </div>
+    </section>
   </div>
 
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

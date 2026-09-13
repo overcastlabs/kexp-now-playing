@@ -1,7 +1,7 @@
 'use strict';
 
-const HISTORY_SIZE = 20;
-const API_URL = `https://api.kexp.org/v2/plays/?limit=${HISTORY_SIZE + 1}&ordering=-airdate`;
+const { HISTORY_SIZE_OPTIONS, SETTINGS_DEFAULTS } = APP_CONFIG;
+const API_ROOT = 'https://api.kexp.org/v2/plays/';
 const AIRBREAK_IMAGE = 'images/icon-large.svg';
 const ALBUM_FALLBACK = 'images/album-fallback.svg';
 const AIRBREAK_TYPE = 'airbreak';
@@ -13,6 +13,9 @@ const EL_CURRENT_ART = document.querySelector('.current-art');
 const EL_CURRENT_TRACK = document.getElementById('current-track');
 const EL_HISTORY = document.getElementById('history');
 const EL_HISTORY_LIST = document.getElementById('history-list');
+const EL_DEFAULT_SIDEBAR = document.getElementById('default-sidebar');
+const EL_HISTORY_SIZE = document.getElementById('history-size');
+const EL_SHOW_HISTORY_COMMENTS = document.getElementById('show-history-comments');
 const REFRESH_INTERVAL = 6e4; // 1min
 const TEXT_STRINGS = {
   now_playing: 'Now Playing',
@@ -23,10 +26,37 @@ const TEXT_STRINGS = {
 
 const urlParams = new URLSearchParams(window.location.search);
 const env = urlParams.get('env');
+let settings = { ...SETTINGS_DEFAULTS };
 
 if (env) {
   document.documentElement.classList.add(`${env}-view`);
 }
+
+const normalizeSettings = (storedSettings) => {
+  const parsedHistorySize = Number(storedSettings.historySize);
+  return {
+    defaultView: storedSettings.defaultView === 'sidebar' ? 'sidebar' : 'popup',
+    historySize: HISTORY_SIZE_OPTIONS.includes(parsedHistorySize)
+      ? parsedHistorySize
+      : SETTINGS_DEFAULTS.historySize,
+    showHistoryComments: storedSettings.showHistoryComments === true,
+  };
+};
+
+const syncSettingControls = () => {
+  EL_DEFAULT_SIDEBAR.checked = settings.defaultView === 'sidebar';
+  EL_HISTORY_SIZE.value = String(settings.historySize);
+  EL_SHOW_HISTORY_COMMENTS.checked = settings.showHistoryComments;
+};
+
+const getPlaylistUrl = () => {
+  const url = new URL(API_ROOT);
+  url.search = new URLSearchParams({
+    limit: String(settings.historySize + 1),
+    ordering: '-airdate',
+  });
+  return url;
+};
 
 const esc = (str) => {
   const div = document.createElement('div');
@@ -201,10 +231,10 @@ const createHistoryNode = (play) => {
         <h5 class="text-size-md text-weight-bold text-overflow-ellipsis">${play.song}</h5>
         ${play.artist ? `<h6 class="text-color-secondary text-size-sm text-overflow-ellipsis">${play.artist}</h6>` : ''}
       </div>
-      <div class="text-color-muted text-size-sm text-style-italic">${formatTime(play.airdate)}</div>
+      <div class="history-time text-color-muted text-size-sm text-style-italic">${formatTime(play.airdate)}</div>
     </div>
-    `;
-    // ${play.comment ? `<blockquote class="current-info--comment text-size-sm m-b-md">${play.comment}</blockquote>` : ''}
+    ${settings.showHistoryComments && play.comment ? `<blockquote class="history-comment text-size-sm m-b-sm">${play.comment}</blockquote>` : ''}
+  `;
   li.querySelector('.history-art').appendChild(getImg(play));
   li.title = `${play.song} - ${play.artist}`;
   return li;
@@ -213,7 +243,9 @@ const createHistoryNode = (play) => {
 const renderHistory = (plays) => {
   const nodes = plays.map(play => {
     if (!historyNodeCache.has(play.id)) historyNodeCache.set(play.id, createHistoryNode(play));
-    return historyNodeCache.get(play.id);
+    const node = historyNodeCache.get(play.id);
+    node.querySelector('.history-time').textContent = formatTime(play.airdate);
+    return node;
   });
 
   // Reconcile positions without replacing existing nodes
@@ -240,9 +272,22 @@ const refreshFailedAlbumImages = (plays) => {
 };
 
 let cachedKeys = null;
+let refreshTimer = null;
+let activeRequest = null;
+
+const scheduleRefresh = () => {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(load, REFRESH_INTERVAL);
+};
+
 async function load() {
+  clearTimeout(refreshTimer);
+  activeRequest?.abort();
+  const request = new AbortController();
+  activeRequest = request;
+
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(getPlaylistUrl(), { signal: request.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     const plays = data.results.map(hydratePlay) || [];
@@ -252,9 +297,8 @@ async function load() {
     // Look for updated keys and render
     const newKeys = plays.map(play => play.id);
     const currentChanged = !cachedKeys || newKeys[0] !== cachedKeys[0];
-    const historyChanged = !cachedKeys || newKeys.slice(1).some((k, i) => k !== cachedKeys[i + 1]);
     if (currentChanged) renderCurrentTrack(plays[0]);
-    if (historyChanged) renderHistory(plays.slice(1));
+    renderHistory(plays.slice(1));
     refreshFailedAlbumImages(plays);
     cachedKeys = newKeys;
 
@@ -270,18 +314,61 @@ async function load() {
     EL_HISTORY.classList.remove(CLASS_HIDDEN);
     EL_ERROR.classList.add(CLASS_HIDDEN);
   } catch (err) {
+    if (err.name === 'AbortError') return;
     EL_ERROR.classList.remove(CLASS_HIDDEN);
   } finally {
-    EL_LOADER.classList.add(CLASS_HIDDEN);
+    if (activeRequest === request) {
+      activeRequest = null;
+      EL_LOADER.classList.add(CLASS_HIDDEN);
+      scheduleRefresh();
+    }
   }
-
-  setTimeout(load, REFRESH_INTERVAL);
 }
 
 document.querySelectorAll(`.${CLASS_REFRESH}`).forEach(el => el.addEventListener('click', () => {
   EL_LOADER.classList.remove(CLASS_HIDDEN);
   load();
 }));
+
+EL_DEFAULT_SIDEBAR.addEventListener('change', () => {
+  chrome.storage.local.set({
+    defaultView: EL_DEFAULT_SIDEBAR.checked ? 'sidebar' : 'popup',
+  });
+});
+
+EL_HISTORY_SIZE.addEventListener('change', () => {
+  chrome.storage.local.set({ historySize: Number(EL_HISTORY_SIZE.value) });
+});
+
+EL_SHOW_HISTORY_COMMENTS.addEventListener('change', () => {
+  chrome.storage.local.set({
+    showHistoryComments: EL_SHOW_HISTORY_COMMENTS.checked,
+  });
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'local') return;
+
+  const previousSettings = settings;
+  const nextSettings = { ...settings };
+  for (const key of Object.keys(SETTINGS_DEFAULTS)) {
+    if (changes[key]) nextSettings[key] = changes[key].newValue;
+  }
+
+  settings = normalizeSettings(nextSettings);
+  syncSettingControls();
+
+  if (
+    settings.historySize !== previousSettings.historySize ||
+    settings.showHistoryComments !== previousSettings.showHistoryComments
+  ) {
+    cachedKeys = null;
+    historyNodeCache.clear();
+    EL_HISTORY_LIST.replaceChildren();
+    EL_LOADER.classList.remove(CLASS_HIDDEN);
+    load();
+  }
+});
 
 document.querySelector('.sidebar-button')?.addEventListener('click', () => {
   chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT })
@@ -291,10 +378,17 @@ document.querySelector('.sidebar-button')?.addEventListener('click', () => {
     });
 });
 
-renderCurrentTrack({
-  id: '-1',
-  song: TEXT_STRINGS.loading,
-  image_uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-});
+const initialize = async () => {
+  settings = normalizeSettings(await chrome.storage.local.get(SETTINGS_DEFAULTS));
+  syncSettingControls();
 
-load();
+  renderCurrentTrack({
+    id: '-1',
+    song: TEXT_STRINGS.loading,
+    image_uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+  });
+
+  load();
+};
+
+initialize();

@@ -400,6 +400,84 @@ header {
   min-width: 0;
 }
 
+/* ── Settings ───────────────────────────────── */
+.settings-section {
+  gap: .5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-primary);
+}
+
+.settings-list {
+  display: grid;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.25rem;
+  color: var(--text-secondary);
+  font-size: var(--text-size-sm);
+  cursor: pointer;
+}
+
+.setting-row + .setting-row {
+  border-top: 1px solid var(--border);
+}
+
+.setting-row select {
+  min-width: 4rem;
+  padding: .25rem 1.5rem .25rem .5rem;
+  border: 1px solid var(--surface-secondary);
+  border-radius: var(--border-radius);
+  background: var(--bg);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.setting-row input[type='checkbox'] {
+  appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 1.125rem;
+  border: 1px solid var(--surface-secondary);
+  border-radius: 1rem;
+  background: var(--bg);
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+
+.setting-row input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  width: .75rem;
+  height: .75rem;
+  top: .125rem;
+  left: .125rem;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: transform .15s, background-color .15s;
+}
+
+.setting-row input[type='checkbox']:checked {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+}
+
+.setting-row input[type='checkbox']:checked::after {
+  transform: translateX(.875rem);
+  background: var(--bg);
+}
+
+.setting-row select:focus-visible,
+.setting-row input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
 /* ── Utilities ─────────────────────────────── */
 .hidden {
   display: none !important;

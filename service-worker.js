@@ -1,9 +1,35 @@
 'use strict';
 
+importScripts('config.js');
+
+const {
+  ALBUM_IMAGE_CACHE_BUFFER,
+  HISTORY_SIZE_OPTIONS,
+  POPUP_PATH,
+  SETTINGS_DEFAULTS,
+} = APP_CONFIG;
 const ALBUM_IMAGE_CACHE = 'album-images-v2';
 const ALBUM_IMAGE_STAGE_CACHE = 'album-images-stage-v2';
-const ALBUM_IMAGE_CACHE_LIMIT = 21;
 const ALBUM_IMAGE_CACHE_ORDER_KEY = 'albumImageCacheOrder';
+
+const getAlbumImageCacheLimit = async () => {
+  const { historySize } = await chrome.storage.local.get(SETTINGS_DEFAULTS);
+  const parsedSize = Number(historySize);
+  const safeSize = HISTORY_SIZE_OPTIONS.includes(parsedSize)
+    ? parsedSize
+    : SETTINGS_DEFAULTS.historySize;
+  return safeSize + ALBUM_IMAGE_CACHE_BUFFER;
+};
+
+const applyDefaultView = async () => {
+  const { defaultView } = await chrome.storage.local.get(SETTINGS_DEFAULTS);
+  const openAsSidebar = defaultView === 'sidebar';
+
+  await Promise.all([
+    chrome.action.setPopup({ popup: openAsSidebar ? '' : POPUP_PATH }),
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: openAsSidebar }),
+  ]);
+};
 
 const isArchiveImageRequest = (request) => {
   if (request.method !== 'GET' || request.destination !== 'image') return false;
@@ -38,7 +64,8 @@ const stageAlbumImage = async (request) => {
 
   // Bound abandoned staged responses if a popup closes before load/error fires.
   const stagedRequests = await stageCache.keys();
-  const excess = stagedRequests.slice(0, -ALBUM_IMAGE_CACHE_LIMIT);
+  const cacheLimit = await getAlbumImageCacheLimit();
+  const excess = stagedRequests.slice(0, -cacheLimit);
   await Promise.all(excess.map(stagedRequest => stageCache.delete(stagedRequest)));
   return response;
 };
@@ -70,7 +97,8 @@ const updateAlbumImageCache = (action, uri) => {
       await stageCache.delete(uri);
       order = [uri, ...order.filter(cachedUri => cachedUri !== uri)];
 
-      const expiredUris = order.splice(ALBUM_IMAGE_CACHE_LIMIT);
+      const cacheLimit = await getAlbumImageCacheLimit();
+      const expiredUris = order.splice(cacheLimit);
       await Promise.all(expiredUris.map(expiredUri => imageCache.delete(expiredUri)));
     } else if (action === 'evict') {
       await Promise.all([imageCache.delete(uri), stageCache.delete(uri)]);
@@ -92,6 +120,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  caches.delete('album-images-v1');
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && changes.defaultView) {
+    applyDefaultView().catch(console.error);
+  }
 });
+
+chrome.runtime.onInstalled.addListener(() => {
+  Promise.all([
+    caches.delete('album-images-v1'),
+    applyDefaultView(),
+  ]).catch(console.error);
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  applyDefaultView().catch(console.error);
+});
+
+applyDefaultView().catch(console.error);
