@@ -27,21 +27,27 @@ const applyDefaultView = async () => {
   ]);
 };
 
-const isArchiveImageRequest = (request) => {
+const isAlbumImageHost = (hostname) => (
+  hostname === 'coverartarchive.org' ||
+  hostname === 'archive.org' ||
+  hostname.endsWith('.archive.org')
+);
+
+const isAlbumImageRequest = (request) => {
   if (request.method !== 'GET' || request.destination !== 'image') return false;
 
   try {
     const { hostname } = new URL(request.url);
-    return hostname === 'archive.org' || hostname.endsWith('.archive.org');
+    return isAlbumImageHost(hostname);
   } catch {
     return false;
   }
 };
 
-const isArchiveImageUri = (uri) => {
+const isAlbumImageUri = (uri) => {
   try {
     const { hostname } = new URL(uri);
-    return hostname === 'archive.org' || hostname.endsWith('.archive.org');
+    return isAlbumImageHost(hostname);
   } catch {
     return false;
   }
@@ -67,7 +73,7 @@ const stageAlbumImage = async (request) => {
 };
 
 self.addEventListener('fetch', (event) => {
-  if (isArchiveImageRequest(event.request)) {
+  if (isAlbumImageRequest(event.request)) {
     event.respondWith(stageAlbumImage(event.request));
   }
 });
@@ -76,7 +82,7 @@ let cacheMutation = Promise.resolve();
 
 const updateAlbumImageCache = (action, uri) => {
   cacheMutation = cacheMutation.then(async () => {
-    if (!isArchiveImageUri(uri)) return;
+    if (!isAlbumImageUri(uri)) return;
 
     const imageCache = await caches.open(ALBUM_IMAGE_CACHE);
     const stageCache = await caches.open(ALBUM_IMAGE_STAGE_CACHE);

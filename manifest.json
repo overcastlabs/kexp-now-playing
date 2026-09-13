@@ -5,6 +5,7 @@
   "description": "See what's currently playing on KEXP 90.3 FM Seattle",
   "host_permissions": [
     "https://*.archive.org/*",
+    "https://coverartarchive.org/*",
     "https://api.kexp.org/*"
   ],
   "background": {

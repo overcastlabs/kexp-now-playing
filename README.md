@@ -65,6 +65,7 @@ The extension requests only the capabilities used by its interface:
 | `sidePanel` | Opens the persistent Chrome side panel |
 | `storage` | Saves display preferences and tracks the bounded album-art cache order |
 | `https://*.archive.org/*` | Retrieves and caches album artwork hosted by Internet Archive |
+| `https://coverartarchive.org/*` | Retrieves and caches Cover Art Archive URLs before they redirect to Internet Archive |
 
 ## Package the extension
 
