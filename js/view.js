@@ -64,7 +64,7 @@ const createHistoryNode = (play, showComments) => {
       </div>
       <div class="history-time text-color-muted text-size-sm text-style-italic">${formatTime(play.airdate)}</div>
     </div>
-    ${showComments && play.comment ? `<blockquote class="history-comment text-size-sm m-b-sm">${richText(play.comment)}</blockquote>` : ''}
+    ${showComments && !play.isAirbreak && play.comment ? `<blockquote class="history-comment text-size-sm m-b-sm">${richText(play.comment)}</blockquote>` : ''}
   `;
   item.querySelector('.history-art').appendChild(getAlbumArt(play));
   item.title = `${play.song} - ${play.artist}`;
