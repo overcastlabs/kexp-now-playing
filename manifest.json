@@ -33,6 +33,6 @@
     "storage"
   ],
   "side_panel": {
-    "default_path": "app.html?env=sidebar"
+    "default_path": "app.html"
   }
 }

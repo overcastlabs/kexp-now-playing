@@ -59,6 +59,12 @@ Playlist data comes from the [KEXP public API](https://api.kexp.org/v2/plays/). 
 
 The app uses native browser modules and does not require a compilation step. `app.html` can also run in a local browser preview; extension APIs are replaced there by a small `localStorage`-backed adapter.
 
+## GitHub Pages preview
+
+Every push to `main` deploys a browser preview to [overcastlabs.github.io/kexp-now-playing](https://overcastlabs.github.io/kexp-now-playing/). Sidebar mode is the app's default; only `?env=popup` enables popup-specific sizing and controls. The workflow publishes `app.html` as the project index and can also be run manually from GitHub Actions.
+
+Before the first deployment, open the repository's **Settings → Pages** and select **GitHub Actions** as the source. No build dependencies or Pages-specific secrets are required.
+
 ### Permissions
 
 The extension requests only the capabilities used by its interface:

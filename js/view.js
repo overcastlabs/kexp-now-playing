@@ -101,8 +101,8 @@ elements.refreshIndicator.addEventListener('animationend', (event) => {
 });
 
 export const applyViewMode = () => {
-  const viewMode = new URLSearchParams(window.location.search).get('env');
-  if (viewMode) document.documentElement.classList.add(`${viewMode}-view`);
+  const isPopup = new URLSearchParams(window.location.search).get('env') === 'popup';
+  document.documentElement.classList.add(isPopup ? 'popup-view' : 'sidebar-view');
 };
 
 export const initializeResponsiveOptions = () => {
