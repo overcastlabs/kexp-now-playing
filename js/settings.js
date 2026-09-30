@@ -1,4 +1,4 @@
-import { HISTORY_SIZE_OPTIONS, SETTINGS_DEFAULTS } from '../config.js';
+import { HISTORY_SIZE_OPTIONS, SETTINGS_DEFAULTS, THEME_OPTIONS } from '../config.js';
 import { observeStorage, readStorage, writeStorage } from './platform.js';
 
 export const normalizeSettings = (storedSettings) => {
@@ -9,6 +9,9 @@ export const normalizeSettings = (storedSettings) => {
       ? parsedHistorySize
       : SETTINGS_DEFAULTS.historySize,
     showHistoryComments: storedSettings.showHistoryComments === true,
+    theme: THEME_OPTIONS.includes(storedSettings.theme)
+      ? storedSettings.theme
+      : SETTINGS_DEFAULTS.theme,
   };
 };
 

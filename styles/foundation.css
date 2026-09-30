@@ -53,6 +53,7 @@ table {
 }
 
 :root {
+  color-scheme: dark;
   --header-height: 3.25rem;
   --color-brand: #fbad18;
   --color-brand-alt: oklch(from var(--color-brand) calc(l - 0.1) calc(c - 0.05) h);
@@ -66,6 +67,10 @@ table {
   --text-primary: #fffffff4;
   --text-secondary: #aaaaaa;
   --text-muted: #7d7d7d;
+  --app-shadow: rgba(57, 57, 57, 0.3);
+  --header-text: #fffffff4;
+  --interactive-overlay: rgba(255, 255, 255, .15);
+  --refresh-ring: rgba(255, 255, 255, .35);
   --text-size-ratio: 1.33;
   --text-size-xl: calc(1rem * pow(var(--text-size-ratio), 2));
   --text-size-lg: calc(1rem * pow(var(--text-size-ratio), 1));
@@ -80,8 +85,42 @@ table {
   --border-radius: .25rem;
 }
 
+:root[data-theme='light'] {
+  color-scheme: light;
+  --button-overlay: inset 0 0 0 10rem rgba(0, 0, 0, .08);
+  --bg: #f7f7f5;
+  --surface-primary: #ffffff;
+  --surface-secondary: #e6e6e1;
+  --border: #d6d6d0;
+  --text-primary: #171717;
+  --text-secondary: #505050;
+  --text-muted: #6c6c6c;
+  --app-shadow: rgba(0, 0, 0, .18);
+  --header-text: #231f20;
+  --interactive-overlay: rgba(0, 0, 0, .1);
+  --refresh-ring: rgba(0, 0, 0, .35);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --button-overlay: inset 0 0 0 10rem rgba(0, 0, 0, .08);
+    --bg: #f7f7f5;
+    --surface-primary: #ffffff;
+    --surface-secondary: #e6e6e1;
+    --border: #d6d6d0;
+    --text-primary: #171717;
+    --text-secondary: #505050;
+    --text-muted: #6c6c6c;
+    --app-shadow: rgba(0, 0, 0, .18);
+    --header-text: #231f20;
+    --interactive-overlay: rgba(0, 0, 0, .1);
+    --refresh-ring: rgba(0, 0, 0, .35);
+  }
+}
+
 body {
-  background: var(--bg);
+  background: var(--surface-secondary);
   color: var(--text-primary);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 16px;
@@ -112,6 +151,8 @@ body {
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  background: var(--bg);
+  box-shadow: 0 0 1rem .1rem var(--app-shadow);
 }
 
 a {

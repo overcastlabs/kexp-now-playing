@@ -16,6 +16,7 @@ const elements = {
   settingsSummary: document.querySelector('.settings-summary'),
   showHistoryComments: document.getElementById('show-history-comments'),
   sidebarButton: document.querySelector('.sidebar-button'),
+  theme: document.getElementById('theme'),
 };
 const historyNodeCache = new Map();
 
@@ -97,7 +98,10 @@ export const syncSettingControls = (settings) => {
   elements.defaultSidebar.checked = settings.defaultView === 'sidebar';
   elements.historySize.value = String(settings.historySize);
   elements.showHistoryComments.checked = settings.showHistoryComments;
+  elements.theme.value = settings.theme;
 };
+
+export const applyTheme = theme => document.documentElement.dataset.theme = theme;
 
 export const renderCurrentTrack = (play) => {
   elements.currentTrack.innerHTML = `
@@ -169,6 +173,9 @@ export const onRefresh = (listener) => {
 };
 
 export const onSettingsInput = (listener) => {
+  elements.theme.addEventListener('change', () => listener({
+    theme: elements.theme.value,
+  }));
   elements.defaultSidebar.addEventListener('change', () => listener({
     defaultView: elements.defaultSidebar.checked ? 'sidebar' : 'popup',
   }));

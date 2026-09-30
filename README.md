@@ -11,6 +11,7 @@ A lightweight Chrome extension for seeing what is currently playing on [KEXP 90.
 - Manual refresh and error recovery
 - Popup and persistent side-panel layouts
 - Responsive two-column layout for wide side panels and browser previews
+- Configurable system, light, or dark appearance
 - Configurable default view, history length, and DJ comments
 - Collapsible options in the wide layout
 - Direct link to the full KEXP playlist

@@ -9,11 +9,22 @@ header {
   top: 0;
   z-index: 1;
   line-height: 0;
-  box-shadow: 0 0 1rem 0 rgba(57, 57, 57, 0.3);
+  box-shadow: 0 0 1rem 0 var(--app-shadow);
+  color: var(--header-text);
 }
 
 .header-logo {
   height: 1em;
+}
+
+:root[data-theme='light'] .header-logo {
+  filter: invert(1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .header-logo {
+    filter: invert(1);
+  }
 }
 
 .dot {
@@ -126,7 +137,7 @@ header {
   background: linear-gradient(
     -45deg,
     transparent 40%,
-    rgba(255, 255, 255, 0.3) 50%,
+    var(--refresh-ring) 50%,
     transparent 60%
   );
   background-size: 300%;

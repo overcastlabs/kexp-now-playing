@@ -62,7 +62,7 @@
 }
 
 .text-button:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--interactive-overlay);
 }
 
 @property --refresh-sweep {
@@ -107,7 +107,7 @@
   border-radius: 50%;
   background: conic-gradient(
     transparent 0deg var(--refresh-sweep),
-    rgba(255, 255, 255, .35) var(--refresh-sweep) 360deg
+    var(--refresh-ring) var(--refresh-sweep) 360deg
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -139,7 +139,7 @@
 .refresh-indicator.is-refreshing::before {
   background: conic-gradient(
     transparent 0deg var(--refresh-tail),
-    rgba(255, 255, 255, .35) var(--refresh-tail) var(--refresh-head),
+    var(--refresh-ring) var(--refresh-tail) var(--refresh-head),
     transparent var(--refresh-head) 360deg
   );
   animation: refresh-feedback .7s linear 1.5;
@@ -179,7 +179,7 @@
   bottom: 0;
   top: 0;
   width: 80%;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--refresh-ring);
   animation: mui-linear-animation 2s infinite linear;
   transform-origin: left;
 }
@@ -221,7 +221,7 @@
 }
 
 .setting-row select {
-  min-width: 4rem;
+  min-width: 6rem;
   padding: .25rem 1.5rem .25rem .5rem;
   border: 1px solid var(--surface-secondary);
   border-radius: var(--border-radius);

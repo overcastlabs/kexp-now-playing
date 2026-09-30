@@ -82,6 +82,7 @@ observeSettings((changedSettings) => {
   const previousSettings = settings;
   settings = normalizeSettings({ ...settings, ...changedSettings });
   view.syncSettingControls(settings);
+  view.applyTheme(settings.theme);
 
   if (
     settings.historySize !== previousSettings.historySize ||
@@ -95,6 +96,7 @@ observeSettings((changedSettings) => {
 
 const initialize = async () => {
   settings = await loadSettings();
+  view.applyTheme(settings.theme);
   view.syncSettingControls(settings);
   view.renderCurrentTrack(LOADING_TRACK);
   load();
