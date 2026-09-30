@@ -5,6 +5,6 @@ export const THEME_OPTIONS = Object.freeze(['system', 'light', 'dark']);
 export const SETTINGS_DEFAULTS = Object.freeze({
   defaultView: 'popup',
   historySize: 20,
-  showHistoryComments: false,
+  showHistoryComments: true,
   theme: 'system',
 });
