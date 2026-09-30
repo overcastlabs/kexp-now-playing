@@ -5,6 +5,7 @@ const CLASS_LOADING = 'is-loading';
 const ALBUM_FALLBACK = 'images/album-fallback.svg';
 const elements = {
   currentArt: document.querySelector('.current-art'),
+  currentComment: document.getElementById('current-comment'),
   currentTrack: document.getElementById('current-track'),
   defaultSidebar: document.getElementById('default-sidebar'),
   error: document.getElementById('error'),
@@ -136,6 +137,7 @@ export const renderHistorySkeleton = (historySize) => {
 
 export const renderInitialSkeleton = (historySize) => {
   elements.currentArt.innerHTML = skeletonAlbumArt('skeleton-art--current');
+  elements.currentComment.replaceChildren();
   elements.currentTrack.classList.add('is-skeleton');
   elements.currentTrack.setAttribute('aria-busy', 'true');
   elements.currentTrack.setAttribute('aria-label', 'Loading current track');
@@ -156,8 +158,10 @@ export const renderCurrentTrack = (play) => {
     <h1 class="text-size-xl text-weight-black">${richText(play.song)}</h1>
     ${play.artist ? `<h2 class="text-color-secondary text-weight-bold">${richText(play.artist)}</h2>` : ''}
     ${play.album ? `<h3 class="text-size-sm text-style-italic text-color-muted text-weight-bold">${richText(play.album)}${play.year ? ` &ndash; ${yearFromDateString(play.year)}` : ''}</h3>` : ''}
-    ${play.comment ? `<blockquote class="text-size-sm m-t-sm">${richText(play.comment)}</blockquote>` : ''}
   `;
+  elements.currentComment.innerHTML = play.comment
+    ? `<blockquote class="text-size-sm">${richText(play.comment)}</blockquote>`
+    : '';
   elements.currentArt.replaceChildren(getAlbumArt(play));
 };
 

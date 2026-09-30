@@ -56,6 +56,14 @@ header {
   gap: .5rem;
 }
 
+.current-comment {
+  padding: 0 1rem 1.25rem;
+}
+
+.current-comment:empty {
+  padding: 0;
+}
+
 .history-section {
   order: 2;
   padding: 1rem;
@@ -253,12 +261,23 @@ header {
     top: var(--header-height);
     height: calc(100dvh - var(--header-height));
     min-width: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .current-column .current-art,
+  .current-column .current-info,
+  .current-column .settings-section {
+    flex: 0 0 auto;
   }
 
   .current-column .current-info {
-    flex: 1 1 auto;
-    position: static;
-    top: auto;
+    position: sticky;
+    top: 0;
+  }
+
+  .current-column .current-comment {
+    flex: 1 0 auto;
   }
 
   .history-section {
@@ -268,6 +287,11 @@ header {
 
   .settings-section {
     order: initial;
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    margin-top: auto;
+    box-shadow: 0 0 1rem 0 var(--app-shadow);
   }
 
   .settings-summary {
