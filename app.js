@@ -13,6 +13,7 @@ const REFRESH_INTERVAL = 6e4;
 
 let settings = { ...SETTINGS_DEFAULTS };
 let cachedKeys = null;
+let cachedPlays = null;
 let refreshTimer = null;
 let activeRequest = null;
 
@@ -37,14 +38,16 @@ async function load() {
       historySize: settings.historySize,
       signal: request.signal,
     });
-    const newKeys = plays.map(play => play.id);
+    const visiblePlays = plays.slice(0, settings.historySize + 1);
+    const newKeys = visiblePlays.map(play => play.id);
     const currentChanged = !cachedKeys || newKeys[0] !== cachedKeys[0];
 
-    if (currentChanged) view.renderCurrentTrack(plays[0]);
-    view.renderHistory(plays.slice(1), settings.showHistoryComments);
-    view.refreshAlbumImages(plays);
+    if (currentChanged) view.renderCurrentTrack(visiblePlays[0]);
+    view.renderHistory(visiblePlays.slice(1), settings.showHistoryComments);
+    view.refreshAlbumImages(visiblePlays);
     view.prunePlayNodes(new Set(newKeys));
     cachedKeys = newKeys;
+    cachedPlays = visiblePlays;
 
     view.showHistory();
     view.setErrorVisible(false);
@@ -74,22 +77,29 @@ view.onOpenSidePanel(() => {
 
 observeSettings((changedSettings) => {
   const previousSettings = settings;
-  const hasLoadedPlaylist = cachedKeys !== null;
+  const hasLoadedPlaylist = cachedPlays !== null;
   settings = normalizeSettings({ ...settings, ...changedSettings });
   view.syncSettingControls(settings);
   view.applyTheme(settings.theme);
 
-  if (!hasLoadedPlaylist && settings.historySize !== previousSettings.historySize) {
-    view.renderInitialSkeleton(settings.historySize);
+  if (settings.showHistoryComments !== previousSettings.showHistoryComments) {
+    view.setHistoryCommentsVisible(settings.showHistoryComments);
   }
 
-  if (
-    settings.historySize !== previousSettings.historySize ||
-    settings.showHistoryComments !== previousSettings.showHistoryComments
-  ) {
-    cachedKeys = null;
-    view.resetHistory();
-    load();
+  if (settings.historySize !== previousSettings.historySize) {
+    if (settings.historySize > previousSettings.historySize) {
+      view.renderHistorySkeleton(settings.historySize);
+      load();
+    } else if (hasLoadedPlaylist) {
+      const visiblePlays = cachedPlays.slice(0, settings.historySize + 1);
+      const visibleKeys = visiblePlays.map(play => play.id);
+      view.renderHistory(visiblePlays.slice(1), settings.showHistoryComments);
+      view.prunePlayNodes(new Set(visibleKeys));
+      cachedKeys = visibleKeys;
+      cachedPlays = visiblePlays;
+    } else {
+      view.renderHistorySkeleton(settings.historySize);
+    }
   }
 });
 

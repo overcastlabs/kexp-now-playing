@@ -75,6 +75,7 @@ const skeletonHistoryItem = (index) => `
 
 const createHistoryNode = (play, showComments) => {
   const item = document.createElement('li');
+  const hiddenCommentClass = showComments ? '' : ` ${CLASS_HIDDEN}`;
   item.className = 'history-item stack';
   item.innerHTML = `
     <div class="stack stack--horizontal stack--center">
@@ -85,7 +86,7 @@ const createHistoryNode = (play, showComments) => {
       </div>
       <div class="history-time text-color-muted text-size-sm text-style-italic">${formatTime(play.airdate)}</div>
     </div>
-    ${showComments && !play.isAirbreak && play.comment ? `<blockquote class="history-comment text-size-sm m-b-sm">${richText(play.comment)}</blockquote>` : ''}
+    ${!play.isAirbreak && play.comment ? `<blockquote class="history-comment text-size-sm m-b-sm${hiddenCommentClass}">${richText(play.comment)}</blockquote>` : ''}
   `;
   item.querySelector('.history-art').appendChild(getAlbumArt(play));
   item.title = `${play.song} - ${play.artist}`;
@@ -123,6 +124,16 @@ export const syncSettingControls = (settings) => {
 
 export const applyTheme = theme => document.documentElement.dataset.theme = theme;
 
+export const renderHistorySkeleton = (historySize) => {
+  elements.history.classList.add('is-skeleton');
+  elements.history.setAttribute('aria-busy', 'true');
+  elements.historyList.innerHTML = Array.from(
+    { length: historySize },
+    (_, index) => skeletonHistoryItem(index)
+  ).join('');
+  showHistory();
+};
+
 export const renderInitialSkeleton = (historySize) => {
   elements.currentArt.innerHTML = skeletonAlbumArt('skeleton-art--current');
   elements.currentTrack.classList.add('is-skeleton');
@@ -134,13 +145,7 @@ export const renderInitialSkeleton = (historySize) => {
     <span class="skeleton skeleton--track-album" aria-hidden="true"></span>
   `;
 
-  elements.history.classList.add('is-skeleton');
-  elements.history.setAttribute('aria-busy', 'true');
-  elements.historyList.innerHTML = Array.from(
-    { length: historySize },
-    (_, index) => skeletonHistoryItem(index)
-  ).join('');
-  showHistory();
+  renderHistorySkeleton(historySize);
 };
 
 export const renderCurrentTrack = (play) => {
@@ -182,19 +187,18 @@ export const renderHistory = (plays, showComments) => {
   }
 };
 
+export const setHistoryCommentsVisible = isVisible => {
+  elements.historyList.querySelectorAll('.history-comment').forEach((comment) => {
+    comment.classList.toggle(CLASS_HIDDEN, !isVisible);
+  });
+};
+
 export const refreshAlbumImages = plays => refreshFailedAlbumImages(plays);
 
 export const prunePlayNodes = (activeKeys) => {
   pruneAlbumArt(activeKeys);
   for (const key of historyNodeCache.keys()) {
     if (!activeKeys.has(key)) historyNodeCache.delete(key);
-  }
-};
-
-export const resetHistory = () => {
-  historyNodeCache.clear();
-  if (!elements.history.classList.contains('is-skeleton')) {
-    elements.historyList.replaceChildren();
   }
 };
 
