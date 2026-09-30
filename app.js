@@ -10,12 +10,6 @@ import {
 import * as view from './js/view.js';
 
 const REFRESH_INTERVAL = 6e4;
-const LOADING_TRACK = Object.freeze({
-  id: '-1',
-  song: 'Loading',
-  artist: '',
-  image_uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-});
 
 let settings = { ...SETTINGS_DEFAULTS };
 let cachedKeys = null;
@@ -80,9 +74,14 @@ view.onOpenSidePanel(() => {
 
 observeSettings((changedSettings) => {
   const previousSettings = settings;
+  const hasLoadedPlaylist = cachedKeys !== null;
   settings = normalizeSettings({ ...settings, ...changedSettings });
   view.syncSettingControls(settings);
   view.applyTheme(settings.theme);
+
+  if (!hasLoadedPlaylist && settings.historySize !== previousSettings.historySize) {
+    view.renderInitialSkeleton(settings.historySize);
+  }
 
   if (
     settings.historySize !== previousSettings.historySize ||
@@ -98,7 +97,7 @@ const initialize = async () => {
   settings = await loadSettings();
   view.applyTheme(settings.theme);
   view.syncSettingControls(settings);
-  view.renderCurrentTrack(LOADING_TRACK);
+  view.renderInitialSkeleton(settings.historySize);
   load();
 };
 

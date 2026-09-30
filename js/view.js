@@ -2,6 +2,7 @@ import { getAlbumArt, pruneAlbumArt, refreshFailedAlbumImages } from './album-ar
 
 const CLASS_HIDDEN = 'hidden';
 const CLASS_LOADING = 'is-loading';
+const ALBUM_FALLBACK = 'images/album-fallback.svg';
 const elements = {
   currentArt: document.querySelector('.current-art'),
   currentTrack: document.getElementById('current-track'),
@@ -53,6 +54,25 @@ const yearFromDateString = (dateString) => {
   return date instanceof Date && !Number.isNaN(date.valueOf()) ? date.getFullYear() : '';
 };
 
+const skeletonAlbumArt = className => `
+  <div class="album-art skeleton-art surface-secondary img-aspect-square ${className}">
+    <img src="${ALBUM_FALLBACK}" alt="" class="img-fullsize img-aspect-square">
+  </div>
+`;
+
+const skeletonHistoryItem = (index) => `
+  <li class="history-item stack" aria-hidden="true">
+    <div class="stack stack--horizontal stack--center">
+      <div class="history-art">${skeletonAlbumArt('')}</div>
+      <div class="history-meta skeleton-copy">
+        <span class="skeleton skeleton--history-title skeleton--width-${index % 3}"></span>
+        <span class="skeleton skeleton--history-artist"></span>
+      </div>
+      <span class="skeleton skeleton--history-time"></span>
+    </div>
+  </li>
+`;
+
 const createHistoryNode = (play, showComments) => {
   const item = document.createElement('li');
   item.className = 'history-item stack';
@@ -103,7 +123,30 @@ export const syncSettingControls = (settings) => {
 
 export const applyTheme = theme => document.documentElement.dataset.theme = theme;
 
+export const renderInitialSkeleton = (historySize) => {
+  elements.currentArt.innerHTML = skeletonAlbumArt('skeleton-art--current');
+  elements.currentTrack.classList.add('is-skeleton');
+  elements.currentTrack.setAttribute('aria-busy', 'true');
+  elements.currentTrack.setAttribute('aria-label', 'Loading current track');
+  elements.currentTrack.innerHTML = `
+    <span class="skeleton skeleton--track-title" aria-hidden="true"></span>
+    <span class="skeleton skeleton--track-artist" aria-hidden="true"></span>
+    <span class="skeleton skeleton--track-album" aria-hidden="true"></span>
+  `;
+
+  elements.history.classList.add('is-skeleton');
+  elements.history.setAttribute('aria-busy', 'true');
+  elements.historyList.innerHTML = Array.from(
+    { length: historySize },
+    (_, index) => skeletonHistoryItem(index)
+  ).join('');
+  showHistory();
+};
+
 export const renderCurrentTrack = (play) => {
+  elements.currentTrack.classList.remove('is-skeleton');
+  elements.currentTrack.removeAttribute('aria-busy');
+  elements.currentTrack.removeAttribute('aria-label');
   elements.currentTrack.innerHTML = `
     <h1 class="text-size-xl text-weight-black">${richText(play.song)}</h1>
     ${play.artist ? `<h2 class="text-color-secondary text-weight-bold">${richText(play.artist)}</h2>` : ''}
@@ -114,6 +157,12 @@ export const renderCurrentTrack = (play) => {
 };
 
 export const renderHistory = (plays, showComments) => {
+  if (elements.history.classList.contains('is-skeleton')) {
+    elements.history.classList.remove('is-skeleton');
+    elements.history.removeAttribute('aria-busy');
+    elements.historyList.replaceChildren();
+  }
+
   const nodes = plays.map((play) => {
     if (!historyNodeCache.has(play.id)) {
       historyNodeCache.set(play.id, createHistoryNode(play, showComments));
@@ -144,7 +193,9 @@ export const prunePlayNodes = (activeKeys) => {
 
 export const resetHistory = () => {
   historyNodeCache.clear();
-  elements.historyList.replaceChildren();
+  if (!elements.history.classList.contains('is-skeleton')) {
+    elements.historyList.replaceChildren();
+  }
 };
 
 export const setLoading = isLoading => elements.loader.classList.toggle(CLASS_LOADING, isLoading);

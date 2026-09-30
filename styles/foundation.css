@@ -71,6 +71,7 @@ table {
   --header-text: #fffffff4;
   --interactive-overlay: rgba(255, 255, 255, .15);
   --refresh-ring: rgba(255, 255, 255, .35);
+  --skeleton-highlight: rgba(255, 255, 255, .16);
   --text-size-ratio: 1.33;
   --text-size-xl: calc(1rem * pow(var(--text-size-ratio), 2));
   --text-size-lg: calc(1rem * pow(var(--text-size-ratio), 1));
@@ -99,6 +100,7 @@ table {
   --header-text: #231f20;
   --interactive-overlay: rgba(0, 0, 0, .1);
   --refresh-ring: rgba(0, 0, 0, .35);
+  --skeleton-highlight: rgba(255, 255, 255, .7);
 }
 
 @media (prefers-color-scheme: light) {
@@ -116,6 +118,7 @@ table {
     --header-text: #231f20;
     --interactive-overlay: rgba(0, 0, 0, .1);
     --refresh-ring: rgba(0, 0, 0, .35);
+    --skeleton-highlight: rgba(255, 255, 255, .7);
   }
 }
 

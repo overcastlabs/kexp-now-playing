@@ -80,6 +80,86 @@ header {
   min-width: 0;
 }
 
+.skeleton {
+  display: block;
+  border-radius: var(--border-radius);
+  background-color: var(--surface-secondary);
+  background-image: linear-gradient(
+    90deg,
+    transparent 25%,
+    var(--skeleton-highlight) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-wave 1.5s ease-in-out infinite;
+}
+
+.skeleton--track-title {
+  width: 72%;
+  height: var(--text-size-xl);
+}
+
+.skeleton--track-artist {
+  width: 46%;
+  height: var(--text-size-md);
+}
+
+.skeleton--track-album {
+  width: 58%;
+  height: var(--text-size-sm);
+}
+
+.skeleton-copy {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.skeleton--history-title {
+  height: var(--text-size-md);
+}
+
+.skeleton--history-artist {
+  width: 42%;
+  height: var(--text-size-sm);
+}
+
+.skeleton--history-time {
+  flex: 0 0 2.25rem;
+  height: var(--text-size-sm);
+}
+
+.skeleton--width-0 {
+  width: 78%;
+}
+
+.skeleton--width-1 {
+  width: 62%;
+}
+
+.skeleton--width-2 {
+  width: 88%;
+}
+
+.skeleton-art {
+  opacity: .7;
+}
+
+.history-section.is-skeleton .button {
+  visibility: hidden;
+}
+
+@keyframes skeleton-wave {
+  from { background-position-x: 200%; }
+  to { background-position-x: -200%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
 .settings-section {
   order: 3;
   padding: 1rem;
