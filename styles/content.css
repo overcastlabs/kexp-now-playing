@@ -238,12 +238,20 @@ header {
 }
 
 @media (max-width: 600px) {
+  body {
+    background: var(--surface-primary);
+  }
+
   .settings-summary {
     pointer-events: none;
   }
 }
 
 @media (min-width: 601px) {
+  .app {
+    box-shadow: 0 0 1rem .1rem var(--app-shadow);
+  }
+
   .content-layout {
     display: grid;
     grid-template-columns: minmax(300px, 5fr) minmax(0, 7fr);

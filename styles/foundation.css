@@ -138,7 +138,7 @@ body {
 }
 
 .sidebar-view body {
-  height: 100vh;
+  height: 100dvh;
   width: 100%;
   max-width: 1200px;
 }
@@ -151,12 +151,9 @@ body {
 }
 
 .app {
-  height: 100%;
+  min-height: 100%;
   width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
   background: var(--bg);
-  box-shadow: 0 0 1rem .1rem var(--app-shadow);
 }
 
 a {
