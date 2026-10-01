@@ -100,9 +100,10 @@ elements.refreshIndicator.addEventListener('animationend', (event) => {
   }
 });
 
-export const applyViewMode = () => {
+export const applyViewMode = isExtensionContext => {
   const isPopup = new URLSearchParams(window.location.search).get('env') === 'popup';
-  document.documentElement.classList.add(isPopup ? 'popup-view' : 'sidebar-view');
+  isPopup && document.documentElement.classList.add('popup-view');
+  document.documentElement.classList.toggle('not-extension-context', !isExtensionContext);
 };
 
 export const initializeResponsiveOptions = () => {

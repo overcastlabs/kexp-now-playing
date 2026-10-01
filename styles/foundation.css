@@ -130,6 +130,9 @@ body {
   line-height: 1.5;
   margin: 0 auto;
   padding: 0;
+  height: 100dvh;
+  width: 100%;
+  max-width: 1200px;
 }
 
 .popup-view body {
@@ -137,14 +140,7 @@ body {
   height: 600px;
 }
 
-.sidebar-view body {
-  height: 100dvh;
-  width: 100%;
-  max-width: 1200px;
-}
-
-.popup-view .current-info,
-.sidebar-view .current-info {
+.current-info {
   position: sticky;
   top: var(--header-height);
   z-index: 1;

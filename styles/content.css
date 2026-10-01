@@ -200,6 +200,10 @@ header {
   cursor: pointer;
 }
 
+.not-extension-context .extension-only {
+  display: none;
+}
+
 .setting-row + .setting-row {
   border-top: 1px solid var(--border);
 }

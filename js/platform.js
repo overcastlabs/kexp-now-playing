@@ -4,6 +4,7 @@ const hasExtensionStorage = Boolean(
   chromeApi?.storage?.local?.set &&
   chromeApi?.storage?.onChanged?.addListener
 );
+export const isExtensionContext = hasExtensionStorage;
 const previewStorageKey = 'kexp-now-playing-settings';
 const previewStorageListeners = new Set();
 let previewSettings = {};

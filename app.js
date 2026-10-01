@@ -1,5 +1,5 @@
 import { SETTINGS_DEFAULTS } from './config.js';
-import { openSidePanel } from './js/platform.js';
+import { isExtensionContext, openSidePanel } from './js/platform.js';
 import { fetchPlaylist } from './js/playlist.js';
 import {
   loadSettings,
@@ -63,7 +63,7 @@ async function load() {
   }
 }
 
-view.applyViewMode();
+view.applyViewMode(isExtensionContext);
 view.initializeResponsiveOptions();
 view.onRefresh(load);
 view.onSettingsInput(saveSettings);

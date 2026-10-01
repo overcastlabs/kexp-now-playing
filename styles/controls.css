@@ -95,10 +95,6 @@
   border-radius: 50%;
 }
 
-.sidebar-view .refresh-indicator {
-  display: grid;
-}
-
 .refresh-indicator::before {
   content: '';
   position: absolute;
@@ -210,12 +206,11 @@
     visibility 0s linear;
 }
 
-.refresh,
+.popup-view .refresh,
 .sidebar-button {
   display: none;
 }
 
-.sidebar-view .refresh,
 .popup-view .sidebar-button {
   display: block;
 }
